@@ -126,9 +126,24 @@ program
     requiredOption(cmd, 'host');
     requiredOption(cmd, 'port');
     console.log(colors.blue('[run]'));
-    console.log('Run the container inside the remote server');
+    console.log('Run the container inside the remote host');
 
     execSyncProgress(`ssh ${cmd.host} docker run --rm -d -p ${cmd.port}:80 ${cmd.tag}`);
+    console.log(colors.green('The task was successful'));
+  });
+
+program
+  .command('exit')
+  .description('Stop container on remote host and remove it')
+  .option('--tag <code:latest>', 'Docker image tag to stop and remove on remote host')
+  .option('--host <john@example.com>', 'Host where to stop and remove docker container')
+  .action((cmd) => {
+    requiredOption(cmd, 'tag');
+    requiredOption(cmd, 'host');
+    console.log(colors.blue('[exit]'));
+    console.log('Stop the container inside the remote host and remove it');
+
+    execSyncProgress(`ssh ${cmd.host} docker rm $(docker stop $(docker ps -a -q --filter ancestor=constructor:latest --format="{{.ID}}") || true) || true`);
     console.log(colors.green('The task was successful'));
   });
 
@@ -228,6 +243,9 @@ program
         execSyncProgress(`${exec} load --tag ${tag} --host ${cmd.host}`); // load the image to the remote docker
         break;
     }
+
+    console.log('');
+    execSyncProgress(`${exec} exit --tag ${tag} --host ${cmd.host}`); // stop and remove running containers with the same tag
 
     console.log('');
     execSyncProgress(`${exec} run --tag ${tag} --host ${cmd.host} --port ${cmd.port}`); // start the container on the remote

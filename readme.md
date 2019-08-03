@@ -106,11 +106,12 @@ But, if something went wrong, you can just rerun failed command with logged argu
 
 Command | Description 
 --- | ---
-upload [options] <path> | Upload source code to the remote host
-build [options] <path> | Build docker image from source code: local and remote build scenarios are allowed
-archive [options] | Archive image to temporary file
-transfer [options] | Transfer image archive to remote host
-load [options] | Load image from archive on remote host
-run [options] | Run container on remote host
-clean [options] | Clean local and remote hosts
-deploy [options] <path> | Deploy container to the remote host
+upload [options] <path> | Upload source code to the remote host.
+build [options] <path> | Build docker image from source code: local and remote build scenarios are allowed.
+archive [options] | Archive image to temporary file.
+transfer [options] | Transfer image archive to remote host.
+load [options] | Load image from archive on remote host.
+exit [options] | Stop and remove running container.
+run [options] | Run container on remote host.
+clean [options] | Clean local and remote hosts.
+deploy [options] <path> | Deploy container to the remote host.
