@@ -1,10 +1,19 @@
 {
   "name": "depler",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Deploy docker app to remote host easily without any dependencies like registry or swarm.",
   "main": "index.js",
   "author": "Pavel Kondratenko <iam@kondratenko.me>",
+  "repository": "github:gustarus/depler",
   "license": "ISC",
+  "engines": {
+    "node": ">=8.11.1"
+  },
+  "keywords": [
+    "docker",
+    "swarm",
+    "deploy"
+  ],
   "bin": {
     "depler": "./index.js"
   },
