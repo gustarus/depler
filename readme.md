@@ -148,3 +148,29 @@ exit [options] | Stop and remove running container.
 run [options] | Run container on remote host.
 clean [options] | Clean local and remote hosts.
 deploy [options] <path> | Deploy container to the remote host.
+
+### Overrides for commands
+There is an ability to override some commands like `docker run` or `docker build`.
+You can pass custom arguments to this commands through `.json` settings file.
+Section `default` will be used for all commands.
+Section `run:container` will be used when docker will be deployed as single detached container.
+Section `run:service` will be used when docker will be deployed as service.
+```json
+{
+  "default": {},
+  "commands": {
+    "run": {
+      "container": {
+      },
+      "service": {
+        "replicas": 3
+      }
+    }
+  }
+}
+```
+
+
+## To be done
+* [ ] Automatically run `docker swarm init` on remote host.
+* [ ] Additional overrides for the commands via `settings.json`.
