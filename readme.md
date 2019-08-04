@@ -22,14 +22,25 @@ Install globally to use `depler deploy` from everywhere.
 npm i --save-dev -g depler
 ```
 
-**2. [optional] Setup swarm manager on remote machine**
+**2. Expose port `80` in your dockerfile**
+
+By default `depler` thinks that you expose port `80` in your dockerfile like below.
+In the future, we will improve this feature and will implement ability to bind to another port via argument.
+But now, please, expose this port in your dockerfile.
+```dockerfile
+# run the app
+CMD ["node", "server.js", "--port", "80"]
+EXPOSE 80
+```
+
+**3. [optional] Setup swarm manager on remote machine**
 
 Run this command if you want to deploy as service (see commands → options section).
 ```bash
 ssh john@example.com docker swarm init
 ```
 
-**3. Add scripts to package.json**
+**4. [optional] Add scripts to package.json**
 
 Add script to your package.json because commands usually too long to type them every time in console.
 ```json
