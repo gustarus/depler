@@ -1,0 +1,12 @@
+{
+  "default": {},
+  "commands": {
+    "run": {
+      "container": {
+      },
+      "service": {
+        "replicas": 3
+      }
+    }
+  }
+}

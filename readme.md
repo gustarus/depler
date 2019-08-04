@@ -1,10 +1,17 @@
 # Depler ![docker](https://img.shields.io/badge/-docker_deploy-333?style=flat-square&logo=docker) ![with love](https://img.shields.io/badge/-with_love-ff69b4?style=flat-square) ![hardcore](https://img.shields.io/badge/-hardcore-orange?style=flat-square)
 **Easily deploy your docker app to single remote host without dependencies**.
-No registry. No swarm. No kubernetes.
+No registry. No swarm (actually, optional). No kubernetes.
 Only hardcore. Only single remote machine.
 What you only need: it is docker on both - local and remote machines.
 
 ## Installation
+**0. Install docker**
+
+This package requires docker on both: local and remote machines.
+Just google for `install docker %os%`.
+
+**1. Install the package**
+
 Install as local package to link with `./node_modules/.bin`.
 ```bash
 npm i --save-dev depler
@@ -14,6 +21,15 @@ Install globally to use `depler deploy` from everywhere.
 ```bash
 npm i --save-dev -g depler
 ```
+
+**2. [optional] Setup swarm manager on remote machine**
+
+Run this command if you want to deploy as service (see commands → options section).
+```bash
+ssh john@example.com docker swarm init
+```
+
+**3. Add scripts to package.json**
 
 Add script to your package.json because commands usually too long to type them every time in console.
 ```json
@@ -28,17 +44,17 @@ Add script to your package.json because commands usually too long to type them e
 ### Copy-and-paste source code to remote host → build docker image remotely → run docker container remotely
 Take a look at this command.
 ```bash
-depler deploy --code my-nodejs-app --host web@192.168.1.22 --source --port 8080 .
+depler deploy --code my-nodejs-app --host web@192.168.1.22 --as source --port 8080 .
 ```
 
-> Bro, deploy the app (`deploy`) for me with repository name `my-nodejs-app` (`--code`) to host `192.168.1.22` as user `web` (`--host`) using `source` strategy (`--source`) and run it on port `8080` (`--port`).
+> Bro, deploy the app (`deploy`) for me with repository name `my-nodejs-app` (`--code`) to host `192.168.1.22` as user `web` (`--host`) using `source` strategy (`--as source`) and run it on port `8080` (`--port`).
 
-The flag `---source` tells tool that we should copy source code to remote host → build image → run container on remote host.
+The flag `---as source` tells tool that we should copy source code to remote host → build image → run container on remote host.
 
 ### Build docker image locally → transfer image to remote host → run docker container remotely
-Almost the same command, but instead of `--source` we should pass `--image` flag.
+Almost the same command, but instead of `--as source` we should pass `--as image` flag.
 ```bash
-depler deploy --code my-nodejs-app --host web@192.168.1.22 --source --port 8080 .
+depler deploy --code my-nodejs-app --host web@192.168.1.22 --as source --port 8080 .
 ```
 
 This flag tells tool that we should build image locally first → transfer it to remote host → run container on remote host.
@@ -48,9 +64,9 @@ I run into some problems when I tried to deploy my app from OS X to Raspberry PI
 So, my workaround is easy: deploy only source code of the app and build image remotely from different docker image.
 
 Take a look at this command.
-It says to the tool: *bro, deploy the app (`deploy`) with repository name `my-nodejs-app` (`--code`) to host `192.168.1.22` as user `web` (`--host`) using `source` strategy (`--source`) and build the image with arg `FROM=arm64v8/node:10.16.1-buster-slim` (`--build-arg`) and run the container on port `8080` (`--port`)*.
+It says to the tool: *bro, deploy the app (`deploy`) with repository name `my-nodejs-app` (`--code`) to host `192.168.1.22` as user `web` (`--host`) using `source` strategy (`--as source`) and build the image with arg `FROM=arm64v8/node:10.16.1-buster-slim` (`--build-arg`) and run the container on port `8080` (`--port`)*.
 ```bash
-depler deploy --code my-nodejs-app --host web@192.168.1.22 --source --build-arg FROM=arm64v8/node:10.16.1-buster-slim --port 8080 .
+depler deploy --code my-nodejs-app --host web@192.168.1.22 --as source --build-arg FROM=arm64v8/node:10.16.1-buster-slim --port 8080 .
 ``` 
 
 My dockerfile for the app looks like below.
@@ -77,28 +93,45 @@ Option | Example | Default | Description
 `--release` | `gelborg` | Latest git commit short hash, for example: `b2508fe`. | Release version of the image for tagging. |
 `--host` | `john@example.com` | - | Host where to run docker container. |
 `--port` | `8080` | - | Port to listen when running docker container. |
-`--source` | - | - | Deploy source code as files and build on the remote host. |
-`--image` | - | - | Build locally and transfer image to the remote host. |
+`--as` | `source` or `image` | - | Define deploy scenario:<br/>`source`: deploy source code as files and build on the remote host;<br/>`image`: build locally and transfer image to the remote host. |
+`--run-as` | `container` or `service` | - | Define run as scenario:<br/>`container`: run docker image as single detached container;<br/>`service`: run docker image as a service. |
 `--build-arg` | `FROM=node:10.16` | - | Pass build args as to docker build |
 `--no-cache` | - | - | Do not use cache when building the image |
 `--help` | - | - | Show help readme. |
 
-#### `--source` vs. `--image`
+#### `--as source` vs. `--as image`
 Which to chose? 
 
-The first one (`--source`) tells tool to use the next flow:
+The first one (`--as source`) tells tool to use the next flow:
 1. Copy-and-paste source code from local folder to remote host into `/tmp/...` folder.
 2. Build docker image on remote host via ssh from source code from `/tmp/...` folder.
 3. Run docker container on remote host.
 
-The second one (`--image`) tells tool to use the another flow:
+The second one (`--as image`) tells tool to use the another flow:
 1. Build docker image locally.
 2. Archive image to `.tar` file and put it into local `/tmp/...` folder.
 3. Transfer archive to remote host and put it into `/tmp/...` remote folder.
 4. Load archive to docker from `/tmp/...` folder.
 5. Run docker container on remote host.
 
-I prefer to use the second scenario (`--image`).
+I prefer to use the second scenario (`--as image`).
+
+#### `--run-as container` vs. `--run-as service`
+Which to chose? 
+
+The first one (`--run-as container`) tells tool to run the image as a single detached container:
+1. Remove any running service with the same name.
+2. Stop all containers regarding matched name.
+3. Run new container with the tag.
+
+The second one (`--run-as service`) tells tool to use docker service for deployment:
+1. If there is already existed service with the same name:
+1. 1. update the service from the image.
+2. If there is no running service with the same name:
+2. 1. stop all running containers;
+2. 2. create a service with the same name.
+
+I prefer to use the second scenario (`--run-as service`).
 
 ### Other commands
 All other commands from this tool are not usable as standalone commands.
