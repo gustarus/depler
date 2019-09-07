@@ -1,6 +1,6 @@
 {
   "name": "depler",
-  "version": "1.4.5",
+  "version": "1.5.0",
   "description": "Deploy docker app to remote host easily without any dependencies like registry or swarm.",
   "main": "index.js",
   "author": "Pavel Kondratenko <iam@kondratenko.me>",
@@ -18,9 +18,9 @@
     "depler": "./index.js"
   },
   "dependencies": {
-    "child_process": "^1.0.2",
-    "colors": "^1.3.3",
-    "commander": "^2.20.0",
-    "lodash.merge": "^4.6.2"
+    "child_process": "1.0.2",
+    "colors": "1.3.3",
+    "commander": "2.20.0",
+    "lodash.merge": "4.6.2"
   }
 }
