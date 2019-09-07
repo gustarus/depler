@@ -103,7 +103,6 @@ Option | Example | Default | Description
 `--code` | `code` | - | Code of the image for tagging. | 
 `--release` | `gelborg` | Latest git commit short hash, for example: `b2508fe`. | Release version of the image for tagging. |
 `--host` | `john@example.com` | - | Host where to run docker container. |
-`--port` | `8080` | - | Port to listen when running docker container. |
 `--as` | `source` or `image` | - | Define deploy scenario:<br/>`source`: deploy source code as files and build on the remote host;<br/>`image`: build locally and transfer image to the remote host. |
 `--run-as` | `container` or `service` | - | Define run as scenario:<br/>`container`: run docker image as single detached container;<br/>`service`: run docker image as a service. |
 `--build-arg` | `FROM=node:10.16` | - | Pass build args as to docker build |
@@ -173,6 +172,7 @@ Section `run:service` will be used when docker will be deployed as service.
   "commands": {
     "run": {
       "container": {
+        "publish": "8080:80",
         "volume": ["./app:/app", "./data:/data"]
       },
       "service": {
