@@ -353,7 +353,7 @@ function loadCommandConfig(cmd) {
       throw colors.red(`Unable to find override config file in '${cmd.config}`);
     }
 
-    overrides = JSON.parse(fs.readFileSync(cmd.config));
+    overrides = JSON.parse(fs.readFileSync(cmd.config).toString());
   }
 
   return merge({}, defaults.default, defaults.commands[name], overrides.default, overrides.commands[name], cmd.opts());
