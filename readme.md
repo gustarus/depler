@@ -108,6 +108,7 @@ Option | Example | Default | Description
 `--run-as` | `container` or `service` | - | Define run as scenario:<br/>`container`: run docker image as single detached container;<br/>`service`: run docker image as a service. |
 `--build-arg` | `FROM=node:10.16` | - | Pass build args as to docker build |
 `--no-cache` | - | - | Do not use cache when building the image |
+`--config` | - | - | Pass path to custom config file. |
 `--help` | - | - | Show help readme. |
 
 #### `--as source` vs. `--as image`
