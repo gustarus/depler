@@ -10,7 +10,6 @@ const defaults = require('./defaults');
 const prefix = 'from-russia-with-love';
 
 const deployAsFormat = /^(source|image)$/;
-const runAsFormat = /^(container|service)$/;
 const tagFormat = /^[\w\d-_]+:[\w\d-_]+$/;
 
 program
@@ -124,7 +123,6 @@ program
 program
   .command('run')
   .description('Run container on remote host')
-  .option('--as <container|service>', 'Run remote docker as a container or as a service')
   .option('--tag <code:latest>', 'Docker image tag to run on remote host')
   .option('--host <john@example.com>', 'Host where to run docker container')
   .option('--config <path>', 'Use custom config for the command')
@@ -136,11 +134,6 @@ program
     const config = loadCommandConfig(cmd);
     const name = config.tag.split(':')[0];
     const detach = true;
-
-    displayCommandStep(cmd, `Getting running services statuses with image '${name}:*' resolved from tag '${cmd.tag}'`);
-    const servicesLsOptions = { filter: `name=${name}`, format: '"{{.ID}}"' };
-    const servicesLsResult = execSyncProgressReturn('ssh', cmd.host, 'docker service ls', servicesLsOptions);
-    const servicesIds = servicesLsResult && servicesLsResult.split('\n') || [];
 
     function stopContainers() {
       displayCommandStep(cmd, 'Checking for already running containers');
@@ -158,44 +151,14 @@ program
       }
     }
 
-    switch (cmd.as) {
-      case 'container':
-        // run image as single container
-        // executes the following scenario:
-        //  1. remove any running service with the same name
-        //  2. stop all containers regarding matched name
-        //  3. run new container with the tag
-        if (servicesIds.length) {
-          displayCommandStep(cmd, 'Removing running services');
-          execSyncProgressDisplay('ssh', config.host, `docker service rm ${servicesIds.join(' ')}`);
-        }
-
-        stopContainers();
-        displayCommandStep(cmd, `Run the image as a container`);
-        const runOptions = { rm: true, detach, ...config.container };
-        execSyncProgressDisplay('ssh', config.host, 'docker run', runOptions, config.tag);
-        break;
-
-      case 'service':
-        // run image as service
-        // executes the following scenario:
-        //  1. if there is already existed service with the same name:
-        //     1. update the service from the image
-        //  2. if there is no running service with the same name:
-        //     1. stop all running containers
-        //     2. create a service with the same name
-        if (servicesIds.length) {
-          displayCommandStep(cmd, `Update service '${name}' from new image`);
-          const updateConfig = { image: config.tag, detach };
-          execSyncProgressDisplay('ssh', config.host, 'docker service update', updateConfig, name);
-        } else {
-          stopContainers();
-          displayCommandStep(cmd, `Run the container inside a new service '${name}'`);
-          const createOptions = { name, detach, ...config.service };
-          execSyncProgressDisplay('ssh', config.host, 'docker service create', createOptions, config.tag);
-        }
-        break;
-    }
+    // run image as single container
+    // executes the following scenario:
+    //  1. stop all containers regarding matched name
+    //  2. run new container with the tag
+    stopContainers();
+    displayCommandStep(cmd, `Run the image as a container`);
+    const runOptions = { rm: true, detach, ...config.container };
+    execSyncProgressDisplay('ssh', config.host, 'docker run', runOptions, config.tag);
 
     displayCommandDone(cmd);
   });
@@ -230,7 +193,6 @@ program
   .option('--release <latest>', 'Release version of the image for tagging (latest git commit hash by default)')
   .option('--host <john@example.com>', 'Host where to run docker container')
   .option('--as <source|image>', 'Deploy source code or transfer image to remote host')
-  .option('--run-as <container|service>', 'Run remote docker as a container or as a service')
   .option('--build-arg <key=value>', 'Pass build args as to docker build')
   .option('--no-cache', 'Do not use cache when building the image')
   .option('--config <path>', 'Use custom config for the command')
@@ -290,7 +252,7 @@ program
     execSyncProgressDisplay(`${exec} exit --tag ${tag} --host ${cmd.host}`); // stop and remove running containers with the same tag
 
     console.log('');
-    execSyncProgressDisplay(`${exec} run --tag ${tag} --host ${cmd.host} --as ${cmd.runAs} ${cmd.asService && '--as-service' || ''}`); // start the container on the remote
+    execSyncProgressDisplay(`${exec} run --tag ${tag} --host ${cmd.host} --as ${cmd.runAs}`); // start the container on the remote
 
     console.log('');
     execSyncProgressDisplay(`${exec} clean --tag ${tag} --host ${cmd.host}`); // clean local and remote after deploy

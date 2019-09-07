@@ -33,14 +33,7 @@ CMD ["node", "server.js", "--port", "80"]
 EXPOSE 80
 ```
 
-**3. [optional] Setup swarm manager on remote machine**
-
-Run this command if you want to deploy as service (see commands → options section).
-```bash
-ssh john@example.com docker swarm init
-```
-
-**4. [optional] Add scripts to package.json**
+**3. [optional] Add scripts to package.json**
 
 Add script to your package.json because commands usually too long to type them every time in console.
 ```json
@@ -90,6 +83,10 @@ FROM ${FROM}
 
 As you see, I have default value for base image name (`mhart/alpine-node:10.16`), but I override this value with `--build-arg` and set this arg to `arm64v8/node:10.16.1-buster-slim` on docker build stage.
 
+## Scenario
+Deploy tells tool to run the image as a single detached container with te following scenario:
+1. Stop all containers with matched name.
+2. Run new container with the tag.
 
 ## Commands
 ### `Deploy`
@@ -104,7 +101,6 @@ Option | Example | Default | Description
 `--release` | `gelborg` | Latest git commit short hash, for example: `b2508fe`. | Release version of the image for tagging. |
 `--host` | `john@example.com` | - | Host where to run docker container. |
 `--as` | `source` or `image` | - | Define deploy scenario:<br/>`source`: deploy source code as files and build on the remote host;<br/>`image`: build locally and transfer image to the remote host. |
-`--run-as` | `container` or `service` | - | Define run as scenario:<br/>`container`: run docker image as single detached container;<br/>`service`: run docker image as a service. |
 `--build-arg` | `FROM=node:10.16` | - | Pass build args as to docker build |
 `--no-cache` | - | - | Do not use cache when building the image |
 `--config` | - | - | Pass path to custom config file. |
@@ -127,23 +123,6 @@ The second one (`--as image`) tells tool to use the another flow:
 
 I prefer to use the second scenario (`--as image`).
 
-#### `--run-as container` vs. `--run-as service`
-Which to chose? 
-
-The first one (`--run-as container`) tells tool to run the image as a single detached container:
-1. Remove any running service with the same name.
-2. Stop all containers regarding matched name.
-3. Run new container with the tag.
-
-The second one (`--run-as service`) tells tool to use docker service for deployment:
-1. If there is already existed service with the same name:
-1. 1. update the service from the image.
-2. If there is no running service with the same name:
-2. 1. stop all running containers;
-2. 2. create a service with the same name.
-
-I prefer to use the second scenario (`--run-as service`).
-
 ### Other commands
 All other commands from this tool are not usable as standalone commands.
 But, if something went wrong, you can just rerun failed command with logged arguments.
@@ -162,10 +141,9 @@ deploy [options] <path> | Deploy container to the remote host.
 
 ### Overrides for commands
 There is an ability to override some commands like `docker run` or `docker build`.
-You can pass custom arguments to this commands through `.json` settings file.
+You can pass custom arguments to this commands through `.json` settings file with `--config` argument.
 Section `default` will be used for all commands.
-Section `run:container` will be used when docker will be deployed as single detached container.
-Section `run:service` will be used when docker will be deployed as service.
+Section `run:container` will be used to pass variables to docker run script.
 ```json
 {
   "default": {},
@@ -174,9 +152,6 @@ Section `run:service` will be used when docker will be deployed as service.
       "container": {
         "publish": "8080:80",
         "volume": ["./app:/app", "./data:/data"]
-      },
-      "service": {
-        "replicas": 3
       }
     }
   }

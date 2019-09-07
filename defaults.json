@@ -4,9 +4,6 @@
     "run": {
       "container": {
         "publish": "8080:80"
-      },
-      "service": {
-        "replicas": 3
       }
     }
   }
