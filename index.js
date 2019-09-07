@@ -33,7 +33,7 @@ program
 
     // execute child command
     execSyncProgressDisplay(`ssh ${cmd.host} rm -rf ${tmp}`);
-    execSyncProgressDisplay(`rsync -az ${path}/ ${cmd.host}:${tmp}`);
+    execSyncProgressDisplay(`rsync --exclude='/.git' --filter="dir-merge,- .gitignore" -az ${path}/ ${cmd.host}:${tmp}`);
     displayCommandDone(cmd);
   });
 

@@ -100,7 +100,7 @@ Option | Example | Default | Description
 `--code` | `code` | - | Code of the image for tagging. | 
 `--release` | `gelborg` | Latest git commit short hash, for example: `b2508fe`. | Release version of the image for tagging. |
 `--host` | `john@example.com` | - | Host where to run docker container. |
-`--as` | `source` or `image` | - | Define deploy scenario:<br/>`source`: deploy source code as files and build on the remote host;<br/>`image`: build locally and transfer image to the remote host. |
+`--as` | `source` or `image` | - | Define deploy scenario:<br/>`source`: deploy source code as files and build on the remote host without files under the .gitignore;<br/>`image`: build locally and transfer image to the remote host. |
 `--build-arg` | `FROM=node:10.16` | - | Pass build args as to docker build |
 `--no-cache` | - | - | Do not use cache when building the image |
 `--config` | - | - | Pass path to custom config file. |
