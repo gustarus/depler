@@ -129,22 +129,33 @@ program
     displayCommandGreetings(cmd);
     requiredOption(cmd, 'tag', tagFormat);
     requiredOption(cmd, 'host');
+    const entry = cmd.host && `ssh ${cmd.host}`;
     const config = loadCommandConfig(cmd);
     const name = config.tag.split(':')[0];
+
+    if (config.container.network) {
+      displayCommandStep(cmd, 'Creating required networks');
+      const networks = typeof config.container.network === 'string'
+        ? [config.container.network] : config.container.network;
+
+      for (const network of networks) {
+        execSyncProgressDisplay(entry, `docker network create -d bridge ${network} || true`);
+      }
+    }
 
     displayCommandStep(cmd, 'Checking for already running containers');
     const psResult = execSyncProgressReturn('ssh', config.host, `docker ps -a -q --filter "name=${name}" --format="{{.ID}}"`);
     if (psResult) {
       displayCommandStep(cmd, 'Stopping and removing running containers');
       const containersIds = getUniqueValues(psResult.split('\n'));
-      execSyncProgressDisplay('ssh', config.host, `docker rm -f ${containersIds.join(' ')}`);
+      execSyncProgressDisplay(entry, `docker rm -f ${containersIds.join(' ')}`);
     } else {
       displayCommandStep(cmd, 'There is no running containers');
     }
 
     displayCommandStep(cmd, `Run the image as a container`);
     const runOptions = { rm: true, detach: true, name, ...config.container };
-    execSyncProgressDisplay('ssh', config.host, 'docker run', runOptions, config.tag);
+    execSyncProgressDisplay(entry, 'docker run', runOptions, config.tag);
 
     displayCommandDone(cmd);
   });
