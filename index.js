@@ -60,8 +60,7 @@ program
     // by default commander sets cache to true if there is no `--no-cache` flag
     // if you pass `--no-cache` flag in will be stored as false in `cmd.cache`
     // by default `cmd.cache` is enabled
-    const child = [entry, 'docker', 'build', !cmd.cache && '--no-cache', `--tag ${cmd.tag}`, args, path];
-    execSyncProgressDisplay(child.filter((value) => value).join(' '));
+    execSyncProgressDisplay(entry, 'docker', 'build', { 'no-cache': !cmd.cache, tag: cmd.tag }, args, path);
     displayCommandDone(cmd);
   });
 
@@ -133,29 +132,18 @@ program
     const config = loadCommandConfig(cmd);
     const name = config.tag.split(':')[0];
 
-    function stopContainers() {
-      displayCommandStep(cmd, 'Checking for already running containers');
-      const psResult = execSyncProgressReturn('ssh', config.host, `docker ps -a -q --format="{{.Image}}" | grep ${name}: || true`);
-      if (psResult) {
-        displayCommandStep(cmd, 'Stopping and removing running containers');
-        const images = getUniqueValues(psResult.split('\n'));
-        for (const image of images) {
-          const psImageResult = execSyncProgressReturn('ssh', config.host, `docker ps -a -q --filter ancestor=${image} --format="{{.ID}}"`);
-          const containersToStop = psImageResult.split('\n').join(' ');
-          execSyncProgressDisplay('ssh', config.host, `docker stop ${containersToStop}`);
-        }
-      } else {
-        displayCommandStep(cmd, 'There is no running containers');
-      }
+    displayCommandStep(cmd, 'Checking for already running containers');
+    const psResult = execSyncProgressReturn('ssh', config.host, `docker ps -a -q --filter "name=${name}" --format="{{.ID}}"`);
+    if (psResult) {
+      displayCommandStep(cmd, 'Stopping and removing running containers');
+      const containersIds = getUniqueValues(psResult.split('\n'));
+      execSyncProgressDisplay('ssh', config.host, `docker rm -f ${containersIds.join(' ')}`);
+    } else {
+      displayCommandStep(cmd, 'There is no running containers');
     }
 
-    // run image as single container
-    // executes the following scenario:
-    //  1. stop all containers regarding matched name
-    //  2. run new container with the tag
-    stopContainers();
     displayCommandStep(cmd, `Run the image as a container`);
-    const runOptions = { rm: true, detach: true, ...config.container };
+    const runOptions = { rm: true, detach: true, name, ...config.container };
     execSyncProgressDisplay('ssh', config.host, 'docker run', runOptions, config.tag);
 
     displayCommandDone(cmd);
