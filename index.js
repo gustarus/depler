@@ -132,7 +132,6 @@ program
     requiredOption(cmd, 'host');
     const config = loadCommandConfig(cmd);
     const name = config.tag.split(':')[0];
-    const detach = true;
 
     function stopContainers() {
       displayCommandStep(cmd, 'Checking for already running containers');
@@ -156,7 +155,7 @@ program
     //  2. run new container with the tag
     stopContainers();
     displayCommandStep(cmd, `Run the image as a container`);
-    const runOptions = { rm: true, detach, ...config.container };
+    const runOptions = { rm: true, detach: true, ...config.container };
     execSyncProgressDisplay('ssh', config.host, 'docker run', runOptions, config.tag);
 
     displayCommandDone(cmd);
@@ -209,11 +208,14 @@ program
     const release = cmd.release || getLatestCommitHash(path);
     const tag = `${code}:${release}`;
 
+    // get runtime variables
+    const { host, config } = cmd;
+
     // extract build args if passed
     const args = getBuildArguments(cmd.parent.rawArgs);
 
     console.log('');
-    execSyncProgressDisplay(`${exec} clean --tag ${tag} --host ${cmd.host}`); // clean local and remote before deploy
+    execSyncProgressDisplay(`${exec} clean`, { tag, host, config }); // clean local and remote before deploy
 
     switch (cmd.as) {
       case 'source': // deploy source code as files and build on the remote host
@@ -221,11 +223,11 @@ program
         displayCommandStep(cmd, 'Deploy source code as files and build on the remote host');
 
         console.log('');
-        execSyncProgressDisplay(`${exec} upload --tag ${tag} --host ${cmd.host} ${path}`); // upload source code to the remote
+        execSyncProgressDisplay(`${exec} upload`, { tag, host, config }, path); // upload source code to the remote
 
         console.log('');
         const tmp = getPathToTemporarySourceCode(tag); // get path to tmp folder with source code
-        execSyncProgressDisplay(`${exec} build --tag ${tag} --host ${cmd.host} --no-cache ${args} ${tmp}`); // build the image on the remote
+        execSyncProgressDisplay(`${exec} build`, { tag, host, config, 'no-cache': true }, args, tmp); // build the image on the remote
         break;
 
       case 'image': // build locally and transfer image to the remote host
@@ -233,27 +235,27 @@ program
         displayCommandStep(cmd, 'Build locally and transfer image to the remote host');
 
         console.log('');
-        execSyncProgressDisplay(`${exec} build --tag ${tag} --no-cache ${args} ${path}`); // build the image locally
+        execSyncProgressDisplay(`${exec} build`, { tag, config, 'no-cache': true }, args, path); // build the image locally
 
         console.log('');
-        execSyncProgressDisplay(`${exec} archive --tag ${tag}`); // archive the image locally
+        execSyncProgressDisplay(`${exec} archive`, { tag, config }); // archive the image locally
 
         console.log('');
-        execSyncProgressDisplay(`${exec} transfer --tag ${tag} --host ${cmd.host}`); // transfer the image to the remote
+        execSyncProgressDisplay(`${exec} transfer`, { tag, host, config }); // transfer the image to the remote
 
         console.log('');
-        execSyncProgressDisplay(`${exec} load --tag ${tag} --host ${cmd.host}`); // load the image to the remote docker
+        execSyncProgressDisplay(`${exec} load`, { tag, host, config }); // load the image to the remote docker
         break;
     }
 
     console.log('');
-    execSyncProgressDisplay(`${exec} exit --tag ${tag} --host ${cmd.host}`); // stop and remove running containers with the same tag
+    execSyncProgressDisplay(`${exec} exit`, { tag, host, config }); // stop and remove running containers with the same tag
 
     console.log('');
-    execSyncProgressDisplay(`${exec} run --tag ${tag} --host ${cmd.host}`); // start the container on the remote
+    execSyncProgressDisplay(`${exec} run`, { tag, host, config }); // start the container on the remote
 
     console.log('');
-    execSyncProgressDisplay(`${exec} clean --tag ${tag} --host ${cmd.host}`); // clean local and remote after deploy
+    execSyncProgressDisplay(`${exec} clean`, { tag, host, config }); // clean local and remote after deploy
 
     displayCommandDone(cmd);
   });
