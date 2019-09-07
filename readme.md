@@ -58,7 +58,7 @@ Take a look at this command.
 depler deploy --code my-nodejs-app --host web@192.168.1.22 --as source --run-as container .
 ```
 
-> Bro, deploy the app (`deploy`) for me with repository name `my-nodejs-app` (`--code`) to host `192.168.1.22` as user `web` (`--host`) using `source` strategy (`--as source`) and run it on port `8080` (`--port`).
+> Bro, deploy the app (`deploy`) for me with repository name `my-nodejs-app` (`--code`) to host `192.168.1.22` as user `web` (`--host`) using `source` strategy (`--as source`) and run it on port `8080` ([default config](defaults.json)).
 
 The flag `---as source` tells tool that we should copy source code to remote host → build image → run container on remote host.
 
@@ -75,7 +75,7 @@ I run into some problems when I tried to deploy my app from OS X to Raspberry PI
 So, my workaround is easy: deploy only source code of the app and build image remotely from different docker image.
 
 Take a look at this command.
-It says to the tool: *bro, deploy the app (`deploy`) with repository name `my-nodejs-app` (`--code`) to host `192.168.1.22` as user `web` (`--host`) using `source` strategy (`--as source`) and build the image with arg `FROM=arm64v8/node:10.16.1-buster-slim` (`--build-arg`) and run the container on port `8080` (`--port`)*.
+It says to the tool: *bro, deploy the app (`deploy`) with repository name `my-nodejs-app` (`--code`) to host `192.168.1.22` as user `web` (`--host`) using `source` strategy (`--as source`) and build the image with arg `FROM=arm64v8/node:10.16.1-buster-slim` (`--build-arg`) and run the container on port `8080` (default config)*.
 ```bash
 depler deploy --code my-nodejs-app --host web@192.168.1.22 --as source --run-as container --build-arg FROM=arm64v8/node:10.16.1-buster-slim .
 ``` 
