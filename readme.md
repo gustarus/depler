@@ -173,6 +173,7 @@ Section `run:service` will be used when docker will be deployed as service.
   "commands": {
     "run": {
       "container": {
+        "volume": ["./app:/app", "./data:/data"]
       },
       "service": {
         "replicas": 3

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
-const {execSync} = require('child_process');
+const { execSync } = require('child_process');
 const colors = require('colors/safe');
 const program = require('commander');
 const merge = require('lodash.merge');
@@ -141,15 +141,15 @@ program
     const detach = true;
 
     displayCommandStep(cmd, `Getting running services statuses with image '${name}:*' resolved from tag '${cmd.tag}'`);
-    const servicesLsOptions = {filter: `name=${name}`, format: '"{{.ID}}"'};
+    const servicesLsOptions = { filter: `name=${name}`, format: '"{{.ID}}"' };
     const servicesLsResult = execSyncProgressReturn('ssh', cmd.host, 'docker service ls', servicesLsOptions);
     const servicesIds = servicesLsResult && servicesLsResult.split('\n') || [];
 
     function stopContainers() {
-      displayCommandStep(cmd,'Checking for already running containers');
+      displayCommandStep(cmd, 'Checking for already running containers');
       const psResult = execSyncProgressReturn('ssh', config.host, `docker ps -a -q --format="{{.Image}}" | grep ${name}: || true`);
       if (psResult) {
-        displayCommandStep(cmd,'Stopping and removing running containers');
+        displayCommandStep(cmd, 'Stopping and removing running containers');
         const images = getUniqueValues(psResult.split('\n'));
         for (const image of images) {
           const psImageResult = execSyncProgressReturn('ssh', config.host, `docker ps -a -q --filter ancestor=${image} --format="{{.ID}}"`);
@@ -157,7 +157,7 @@ program
           execSyncProgressDisplay('ssh', config.host, `docker stop ${containersToStop}`);
         }
       } else {
-        displayCommandStep(cmd,'There is no running containers');
+        displayCommandStep(cmd, 'There is no running containers');
       }
     }
 
@@ -169,13 +169,13 @@ program
         //  2. stop all containers regarding matched name
         //  3. run new container with the tag
         if (servicesIds.length) {
-          displayCommandStep(cmd,'Removing running services');
+          displayCommandStep(cmd, 'Removing running services');
           execSyncProgressDisplay('ssh', config.host, `docker service rm ${servicesIds.join(' ')}`);
         }
 
         stopContainers();
-        displayCommandStep(cmd,`Run the image as a container`);
-        const runOptions = {rm: true, detach, publish, ...config.container};
+        displayCommandStep(cmd, `Run the image as a container`);
+        const runOptions = { rm: true, detach, publish, ...config.container };
         execSyncProgressDisplay('ssh', config.host, 'docker run', runOptions, config.tag);
         break;
 
@@ -188,13 +188,13 @@ program
         //     1. stop all running containers
         //     2. create a service with the same name
         if (servicesIds.length) {
-          displayCommandStep(cmd,`Update service '${name}' from new image`);
-          const updateConfig = {image: config.tag, detach};
+          displayCommandStep(cmd, `Update service '${name}' from new image`);
+          const updateConfig = { image: config.tag, detach };
           execSyncProgressDisplay('ssh', config.host, 'docker service update', updateConfig, name);
         } else {
           stopContainers();
-          displayCommandStep(cmd,`Run the container inside a new service '${name}'`);
-          const createOptions = {name, detach, publish, ...config.service};
+          displayCommandStep(cmd, `Run the container inside a new service '${name}'`);
+          const createOptions = { name, detach, publish, ...config.service };
           execSyncProgressDisplay('ssh', config.host, 'docker service create', createOptions, config.tag);
         }
         break;
@@ -263,7 +263,7 @@ program
     switch (cmd.as) {
       case 'source': // deploy source code as files and build on the remote host
         console.log('');
-        displayCommandStep(cmd,'Deploy source code as files and build on the remote host');
+        displayCommandStep(cmd, 'Deploy source code as files and build on the remote host');
 
         console.log('');
         execSyncProgressDisplay(`${exec} upload --tag ${tag} --host ${cmd.host} ${path}`); // upload source code to the remote
@@ -342,7 +342,7 @@ function buildCommand(...parts) {
 function execSyncProgressDisplay(...parts) {
   const cmd = buildCommand(...parts);
   console.log(`$ ${cmd}`);
-  return execSync(cmd, {stdio: 'inherit'});
+  return execSync(cmd, { stdio: 'inherit' });
 }
 
 function execSyncProgressReturn(...parts) {
@@ -392,7 +392,7 @@ function getBuildArguments(raw) {
 function loadCommandConfig(cmd) {
   const name = cmd.name();
 
-  let overrides = {commands: {}};
+  let overrides = { commands: {} };
   if (cmd.config) {
     if (!fs.existsSync(cmd.config)) {
       throw colors.red(`Unable to find override config file in '${cmd.config}`);
@@ -419,11 +419,22 @@ function displayCommandDone(cmd) {
 function getOptionsString(options) {
   return Object.keys(options).map((name) => {
     const value = options[name];
+    const prefix = name.length === 1
+      ? `-${name}` : `--${name}`;
+
+    // boolean value
+    // something like `--flag`
     if (typeof value === 'boolean') {
-      return value && `--${name}`;
+      return value && prefix;
     }
 
-    return `--${name} ${options[name]}`;
+    // multiple values with the same key
+    // something like `-v ./app:/app -v ./data:/data`
+    if (value instanceof Array) {
+      return value.map((part) => `${prefix} ${part}`).join(' ');
+    }
+
+    return `${prefix} ${value}`;
   }).filter((value) => value).join(' ');
 }
 
