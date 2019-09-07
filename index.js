@@ -128,7 +128,6 @@ program
   .option('--config <path>', 'Use custom config for the command')
   .action((cmd) => {
     displayCommandGreetings(cmd);
-    requiredOption(cmd, 'as', runAsFormat);
     requiredOption(cmd, 'tag', tagFormat);
     requiredOption(cmd, 'host');
     const config = loadCommandConfig(cmd);
@@ -199,7 +198,6 @@ program
   .action((path, cmd) => {
     displayCommandGreetings(cmd);
     requiredOption(cmd, 'as', deployAsFormat);
-    requiredOption(cmd, 'runAs', runAsFormat);
     requiredOption(cmd, 'code');
     requiredOption(cmd, 'host');
 
@@ -252,7 +250,7 @@ program
     execSyncProgressDisplay(`${exec} exit --tag ${tag} --host ${cmd.host}`); // stop and remove running containers with the same tag
 
     console.log('');
-    execSyncProgressDisplay(`${exec} run --tag ${tag} --host ${cmd.host} --as ${cmd.runAs}`); // start the container on the remote
+    execSyncProgressDisplay(`${exec} run --tag ${tag} --host ${cmd.host}`); // start the container on the remote
 
     console.log('');
     execSyncProgressDisplay(`${exec} clean --tag ${tag} --host ${cmd.host}`); // clean local and remote after deploy
