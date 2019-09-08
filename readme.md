@@ -144,18 +144,27 @@ There is an ability to override some commands like `docker run` or `docker build
 You can pass custom arguments to this commands through `.json` settings file with `--config` argument.
 Section `default` will be used for all commands.
 Section `run:container` will be used to pass variables to docker run script.
+
+A real configuration file to deploy yii2 api project.
 ```json
 {
-  "default": {},
   "commands": {
     "run": {
       "container": {
-        "publish": "8080:80",
-        "volume": ["./app:/app", "./data:/data"]
+        "publish": "8013:80",
+        "volume": "/data/ceater/uploads:/app/web/uploads",
+        "network": "webulla-ceater",
+        "env": [
+          "MYSQL_HOST=webulla-ceater-database",
+          "MYSQL_DATABASE=data",
+          "MYSQL_ROOT_USER=USER",
+          "MYSQL_ROOT_PASSWORD=PASSWORD"
+        ]
       }
     }
   }
 }
+
 ```
 
 
