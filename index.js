@@ -415,7 +415,7 @@ function loadEnvironmentVariables(value) {
     return value.replace(/\${[a-z-_]+}/ig, (matched) => {
       const name = matched.replace(/^\${(.*?)}$/, '$1');
       const value = process.env[name] || matched;
-      return value.replace(/\\n/g, '\\n');
+      return value.replace(/(\r\n|\n|\r)/gm, '\\n');
     });
   }
 
