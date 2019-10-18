@@ -283,15 +283,31 @@ function buildCommand(...parts) {
 }
 
 function execSyncProgressDisplay(...parts) {
-  const cmd = buildCommand(...parts);
-  console.log(`$ ${secretCommandVariables(cmd)}`);
-  return execSync(cmd, { stdio: 'inherit' });
+  return execSyncProgressInternal(parts, 'display');
 }
 
 function execSyncProgressReturn(...parts) {
+  return execSyncProgressInternal(parts, 'return');
+}
+
+function execSyncProgressInternal(parts, scenario) {
   const cmd = buildCommand(...parts);
-  console.log(`$ ${cmd}`);
-  return execSync(cmd).toString().trim();
+  console.log(`$ ${secretCommandVariables(cmd)}`);
+
+  try {
+    switch (scenario) {
+      case 'display':
+        return execSync(cmd, { stdio: 'inherit' });
+      case 'return':
+        return execSync(cmd).toString().trim();
+      default:
+        throw new Error('Invalid scenario passed');
+    }
+  } catch (error) {
+    console.log(colors.red(secretCommandVariables(error.stack)));
+    process.exit(1);
+    return false;
+  }
 }
 
 function getOptionsFromRawArgs(args, option) {
@@ -398,7 +414,8 @@ function loadEnvironmentVariables(value) {
   if (typeof value === 'string') {
     return value.replace(/\${[a-z-_]+}/ig, (matched) => {
       const name = matched.replace(/^\${(.*?)}$/, '$1');
-      return process.env[name] || matched;
+      const value = process.env[name] || matched;
+      return value.replace(/\\n/g, '\\n');
     });
   }
 
