@@ -13,6 +13,12 @@ const deployAsFormat = /^(source|image)$/;
 const tagFormat = /^[\w\d-_]+:[\w\d-_]+$/;
 const mask = '*****';
 
+class Command {
+  constructor(...parts) {
+    this.parts = parts;
+  }
+}
+
 program
   .version(info.version)
   .description('Tool to deploy docker containers to remote host');
@@ -33,7 +39,7 @@ program
     const tmp = getPathToTemporarySourceCode(cmd.tag);
 
     // execute child command
-    execSyncProgressDisplay(`ssh ${cmd.host} rm -rf ${tmp}`);
+    execSyncProgressDisplay('ssh', cmd.host, new Command('rm', '-rf', tmp));
     execSyncProgressDisplay(`rsync --exclude='/.git' --filter="dir-merge,- .gitignore" -az ${path}/ ${cmd.host}:${tmp}`);
     displayCommandDone(cmd);
   });
@@ -51,9 +57,8 @@ program
     const config = loadCommandConfig(cmd);
 
     // get ssh prefix command if remote build requested
-    const entry = cmd.host && `ssh ${cmd.host}`;
-
-    execSyncProgressDisplay(entry, 'docker', 'build', { tag: cmd.tag }, config.image, path);
+    const mainCommand = new Command('docker', 'build', { tag: cmd.tag }, config.image, path);
+    execSyncProgressDisplay(cmd.host ? new Command('ssh', cmd.host, mainCommand) : mainCommand);
     displayCommandDone(cmd);
   });
 
@@ -107,8 +112,8 @@ program
     // get path to temporary archive and validate it
     const archive = getPathToTemporaryArchive(cmd.tag);
 
-    execSyncProgressDisplay(`ssh ${cmd.host} docker load -i ${archive}`);
-    execSyncProgressDisplay(`ssh ${cmd.host} rm -rf ${archive}`);
+    execSyncProgressDisplay('ssh', cmd.host, new Command('docker', 'load', '-i', archive));
+    execSyncProgressDisplay('ssh', cmd.host, new Command('rm', '-rf', archive));
     displayCommandDone(cmd);
   });
 
@@ -132,22 +137,29 @@ program
         ? [config.container.network] : config.container.network;
 
       for (const network of networks) {
-        execSyncProgressDisplay(entry, `docker network create -d bridge ${network} || true`);
+        const networkCommand = new Command(`docker network create -d bridge ${network} || true`);
+        execSyncProgressDisplay(entry ? new Command(entry, networkCommand) : networkCommand);
       }
     }
 
     displayCommandStep(cmd, 'Checking for already running containers');
-    const psResult = execSyncProgressReturn('ssh', config.host, `docker ps -a -q --filter "name=${name}" --format="{{.ID}}"`);
+
+    const listCommand = new Command(`docker ps -a -q --filter "name=${name}" --format="{{.ID}}"`);
+    const psResult = execSyncProgressReturn(entry ? new Command(entry, listCommand) : listCommand);
     if (psResult) {
       displayCommandStep(cmd, 'Stopping and removing running containers');
       const containersIds = getUniqueValues(psResult.split('\n'));
-      execSyncProgressDisplay(entry, `docker rm -f ${containersIds.join(' ')}`);
+      const removeCommand = new Command(`docker rm -f ${containersIds.join(' ')}`);
+      execSyncProgressDisplay(entry ? new Command(entry, removeCommand) : removeCommand);
     } else {
       displayCommandStep(cmd, 'There is no running containers');
     }
 
     displayCommandStep(cmd, `Run the image as a container`);
-    execSyncProgressDisplay(entry, 'docker run', { name }, config.container, config.tag);
+    execSyncProgressDisplay(entry, );
+
+    const runCommand = new Command('docker run', { name }, config.container, config.tag);
+    execSyncProgressDisplay(entry ? new Command(entry, runCommand) : runCommand);
 
     displayCommandDone(cmd);
   });
@@ -170,7 +182,7 @@ program
     const archive = getPathToTemporaryArchive(cmd.tag);
 
     execSyncProgressDisplay(`rm -rf ${tmp} ${archive}`);
-    execSyncProgressDisplay(`ssh ${cmd.host} rm -rf ${tmp} ${archive}`);
+    execSyncProgressDisplay(`ssh ${cmd.host} 'rm -rf ${tmp} ${archive}'`);
     displayCommandDone(cmd);
   });
 
@@ -272,26 +284,47 @@ function requiredPath(path, message = 'Path doesn\'t exist') {
   }
 }
 
-function buildCommand(...parts) {
+function buildCommand(raw) {
+  // flatten wrapped commands
+  // "new Command('a', 'b', 'c')" turns into "'a', 'b', 'c'"
+  const parts = raw instanceof Command ? raw.parts
+    : (raw instanceof Array ? raw : [raw]);
+
+  // is an array consists
+  // only of commands objects
+  let multiple = true;
+  for (const part of parts) {
+    if (!(part instanceof Command)) {
+      multiple = false;
+      break;
+    }
+  }
+
+  // should be something like this:
+  // 'first command && second command'
+  if (multiple) {
+    return parts.map((part) => buildCommand(part))
+      .filter((value) => value).join(' & ');
+  }
+
+  // compile command parts
   return parts.map((part) => {
+    if (part instanceof Command) {
+      const child = buildCommand(part);
+      // wrap child command with quotes and add slashes
+      return `'${child.replace('\'', '\\\'')}'`;
+    }
+
     if (typeof part === 'object') {
       return getOptionsString(part);
     }
 
     return part;
-  }).join(' ');
+  }).filter((value) => value).join(' ');
 }
 
-function execSyncProgressDisplay(...parts) {
-  return execSyncProgressInternal(parts, 'display');
-}
-
-function execSyncProgressReturn(...parts) {
-  return execSyncProgressInternal(parts, 'return');
-}
-
-function execSyncProgressInternal(parts, scenario) {
-  const cmd = buildCommand(...parts);
+function execSyncProgress(parts, scenario) {
+  const cmd = buildCommand(parts);
   console.log(`$ ${secretCommandVariables(cmd)}`);
 
   try {
@@ -310,18 +343,12 @@ function execSyncProgressInternal(parts, scenario) {
   }
 }
 
-function getOptionsFromRawArgs(args, option) {
-  const options = [];
-  for (const key in args) {
-    const part = args[key];
-    const index = parseInt(key, 10);
-    if (part === `--${option}` && args[index + 1]) {
-      const value = args[index + 1];
-      options.push(value);
-    }
-  }
+function execSyncProgressDisplay(...parts) {
+  return execSyncProgress(parts, 'display');
+}
 
-  return options;
+function execSyncProgressReturn(...parts) {
+  return execSyncProgress(parts, 'return');
 }
 
 function getPathToTemporaryArchive(tag) {
@@ -415,7 +442,7 @@ function loadEnvironmentVariables(value) {
     return value.replace(/\${[a-z-_]+}/ig, (matched) => {
       const name = matched.replace(/^\${(.*?)}$/, '$1');
       const value = process.env[name] || matched;
-      return value.replace(/\\n/g, '\\n');
+      return value.replace(/\n/g, '\n');
     });
   }
 
