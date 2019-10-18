@@ -44,11 +44,11 @@ program
   .option('--tag <code:latest>', 'Tag for the image')
   .option('--host <john@example.com>', 'Host where to build docker image; if not passed: will be built locally')
   .option('--build-arg <key=value>', 'Pass build args as to docker build')
-  .option('--no-cache', 'Do not use cache when building the image')
   .option('--config <path>', 'Use custom config for the command')
   .action((path, cmd) => {
     displayCommandGreetings(cmd);
     requiredOption(cmd, 'tag', tagFormat);
+    const config = loadCommandConfig(cmd);
 
     // get ssh prefix command if remote build requested
     const entry = cmd.host && `ssh ${cmd.host}`;
@@ -56,11 +56,7 @@ program
     // extract build args if passed
     const args = getBuildArguments(cmd.parent.rawArgs);
 
-    // as you see, we proxy --no-cache flag
-    // by default commander sets cache to true if there is no `--no-cache` flag
-    // if you pass `--no-cache` flag in will be stored as false in `cmd.cache`
-    // by default `cmd.cache` is enabled
-    execSyncProgressDisplay(entry, 'docker', 'build', { 'no-cache': !cmd.cache, tag: cmd.tag }, args, path);
+    execSyncProgressDisplay(entry, 'docker', 'build', { tag: cmd.tag }, config.image, args, path);
     displayCommandDone(cmd);
   });
 
@@ -154,8 +150,7 @@ program
     }
 
     displayCommandStep(cmd, `Run the image as a container`);
-    const runOptions = { rm: true, detach: true, name, ...config.container };
-    execSyncProgressDisplay(entry, 'docker run', runOptions, config.tag);
+    execSyncProgressDisplay(entry, 'docker run', { name }, config.container, config.tag);
 
     displayCommandDone(cmd);
   });
@@ -191,7 +186,6 @@ program
   .option('--host <john@example.com>', 'Host where to run docker container')
   .option('--as <source|image>', 'Deploy source code or transfer image to remote host')
   .option('--build-arg <key=value>', 'Pass build args as to docker build')
-  .option('--no-cache', 'Do not use cache when building the image')
   .option('--config <path>', 'Use custom config for the command')
   .action((path, cmd) => {
     displayCommandGreetings(cmd);
@@ -226,7 +220,7 @@ program
 
         console.log('');
         const tmp = getPathToTemporarySourceCode(tag); // get path to tmp folder with source code
-        execSyncProgressDisplay(`${exec} build`, { tag, host, config, 'no-cache': true }, args, tmp); // build the image on the remote
+        execSyncProgressDisplay(`${exec} build`, { tag, host, config }, args, tmp); // build the image on the remote
         break;
 
       case 'image': // build locally and transfer image to the remote host
@@ -234,7 +228,7 @@ program
         displayCommandStep(cmd, 'Build locally and transfer image to the remote host');
 
         console.log('');
-        execSyncProgressDisplay(`${exec} build`, { tag, config, 'no-cache': true }, args, path); // build the image locally
+        execSyncProgressDisplay(`${exec} build`, { tag, config }, args, path); // build the image locally
 
         console.log('');
         execSyncProgressDisplay(`${exec} archive`, { tag, config }); // archive the image locally
