@@ -11,6 +11,7 @@ const prefix = 'from-russia-with-love';
 
 const deployAsFormat = /^(source|image)$/;
 const tagFormat = /^[\w\d-_]+:[\w\d-_]+$/;
+const mask = '*****';
 
 program
   .version(info.version)
@@ -43,7 +44,6 @@ program
   .description('Build docker image from source code: local and remote build scenarios are allowed')
   .option('--tag <code:latest>', 'Tag for the image')
   .option('--host <john@example.com>', 'Host where to build docker image; if not passed: will be built locally')
-  .option('--build-arg <key=value>', 'Pass build args as to docker build')
   .option('--config <path>', 'Use custom config for the command')
   .action((path, cmd) => {
     displayCommandGreetings(cmd);
@@ -53,10 +53,7 @@ program
     // get ssh prefix command if remote build requested
     const entry = cmd.host && `ssh ${cmd.host}`;
 
-    // extract build args if passed
-    const args = getBuildArguments(cmd.parent.rawArgs);
-
-    execSyncProgressDisplay(entry, 'docker', 'build', { tag: cmd.tag }, config.image, args, path);
+    execSyncProgressDisplay(entry, 'docker', 'build', { tag: cmd.tag }, config.image, path);
     displayCommandDone(cmd);
   });
 
@@ -185,7 +182,6 @@ program
   .option('--release <latest>', 'Release version of the image for tagging (latest git commit hash by default)')
   .option('--host <john@example.com>', 'Host where to run docker container')
   .option('--as <source|image>', 'Deploy source code or transfer image to remote host')
-  .option('--build-arg <key=value>', 'Pass build args as to docker build')
   .option('--config <path>', 'Use custom config for the command')
   .action((path, cmd) => {
     displayCommandGreetings(cmd);
@@ -204,9 +200,6 @@ program
     // get runtime variables
     const { host, config } = cmd;
 
-    // extract build args if passed
-    const args = getBuildArguments(cmd.parent.rawArgs);
-
     console.log('');
     execSyncProgressDisplay(`${exec} clean`, { tag, host, config }); // clean local and remote before deploy
 
@@ -220,7 +213,7 @@ program
 
         console.log('');
         const tmp = getPathToTemporarySourceCode(tag); // get path to tmp folder with source code
-        execSyncProgressDisplay(`${exec} build`, { tag, host, config }, args, tmp); // build the image on the remote
+        execSyncProgressDisplay(`${exec} build`, { tag, host, config }, tmp); // build the image on the remote
         break;
 
       case 'image': // build locally and transfer image to the remote host
@@ -228,7 +221,7 @@ program
         displayCommandStep(cmd, 'Build locally and transfer image to the remote host');
 
         console.log('');
-        execSyncProgressDisplay(`${exec} build`, { tag, config }, args, path); // build the image locally
+        execSyncProgressDisplay(`${exec} build`, { tag, config }, path); // build the image locally
 
         console.log('');
         execSyncProgressDisplay(`${exec} archive`, { tag, config }); // archive the image locally
@@ -291,7 +284,7 @@ function buildCommand(...parts) {
 
 function execSyncProgressDisplay(...parts) {
   const cmd = buildCommand(...parts);
-  console.log(`$ ${cmd}`);
+  console.log(`$ ${secretCommandVariables(cmd)}`);
   return execSync(cmd, { stdio: 'inherit' });
 }
 
@@ -331,17 +324,10 @@ function getLatestCommitHash(path) {
   return result.toString().trim();
 }
 
-function getBuildArguments(raw) {
-  // extract build args if passed
-  const args = getOptionsFromRawArgs(raw, 'build-arg');
-
-  // append all build args to the child command
-  return args.map((value) => `--build-arg ${value}`).join(' ');
-}
-
 function loadCommandConfig(cmd) {
   const name = cmd.name();
 
+  // parse overrides from the pwd directory
   let overrides = { commands: {} };
   if (cmd.config) {
     if (!fs.existsSync(cmd.config)) {
@@ -351,7 +337,11 @@ function loadCommandConfig(cmd) {
     overrides = JSON.parse(fs.readFileSync(cmd.config).toString());
   }
 
-  return merge({}, defaults.default, defaults.commands[name], overrides.default, overrides.commands[name], cmd.opts());
+  // merge configuration with defaults
+  const config = merge({}, defaults.default, defaults.commands[name], overrides.default, overrides.commands[name], cmd.opts());
+
+  // load environment variables
+  return loadEnvironmentVariables(config);
 }
 
 function displayCommandGreetings(cmd) {
@@ -366,25 +356,77 @@ function displayCommandDone(cmd) {
   displayCommandStep(cmd, colors.green('The task was successful'));
 }
 
+function secretCommandVariables(cmd) {
+  let masked = cmd;
+
+  const template = '(--build-arg|-e|--env)\\s+[a-z-_]+=';
+  const regexp = new RegExp(template, 'ig');
+
+  let match;
+  while ((match = regexp.exec(cmd)) !== null) {
+    const definition = match[0];
+    const char = cmd[regexp.lastIndex];
+    if (['\'', '"'].includes(char)) {
+      // replace '--build-arg SOME_VARIABLE="secret with spaces"'
+      // or "--build-arg SOME_VARIABLE='secret with spaces'" strings
+      const replaceRegex = new RegExp(`${definition}${char}([^${char}]+)${char}`, 'ig');
+      const replaceReplacement = `${definition}${char}${mask}${char}`;
+      masked = masked.replace(replaceRegex, replaceReplacement);
+    } else {
+      // replace '--build-arg SOME_VARIABLE=secret' strings
+      const replaceRegex = new RegExp(`${definition}[^\s]+`, 'ig');
+      const replaceReplacement = `${definition}${mask}`;
+      masked = masked.replace(replaceRegex, replaceReplacement);
+    }
+  }
+
+  return masked;
+}
+
+function loadEnvironmentVariables(value) {
+  if (typeof value === 'object') {
+    const result = value instanceof Array ? [] : {};
+    for (const key in value) {
+      if (value.hasOwnProperty(key)) {
+        result[key] = loadEnvironmentVariables(value[key]);
+      }
+    }
+
+    return result;
+  }
+
+  if (typeof value === 'string') {
+    return value.replace(/\${[a-z-_]+}/ig, (matched) => {
+      const name = matched.replace(/^\${(.*?)}$/, '$1');
+      return process.env[name] || matched;
+    });
+  }
+
+  return value;
+}
+
+function getOptionString(key, value) {
+  const prefix = key.length === 1
+    ? `-${key}` : `--${key}`;
+
+  // boolean value
+  // something like `--flag`
+  if (typeof value === 'boolean') {
+    return value ? prefix : '';
+  }
+
+  return `${prefix} ${value}`;
+}
+
 function getOptionsString(options) {
   return Object.keys(options).map((name) => {
     const value = options[name];
-    const prefix = name.length === 1
-      ? `-${name}` : `--${name}`;
-
-    // boolean value
-    // something like `--flag`
-    if (typeof value === 'boolean') {
-      return value && prefix;
-    }
 
     // multiple values with the same key
     // something like `-v ./app:/app -v ./data:/data`
-    if (value instanceof Array) {
-      return value.map((part) => `${prefix} ${part}`).join(' ');
-    }
-
-    return `${prefix} ${value}`;
+    return value instanceof Array
+      ? value.map((part) => getOptionString(name, part)).join(' ')
+      : getOptionString(name, value);
   }).filter((value) => value).join(' ');
 }
 

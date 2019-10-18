@@ -145,10 +145,24 @@ You can pass custom arguments to this commands through `.json` settings file wit
 Section `default` will be used for all commands.
 Section `run:container` will be used to pass variables to docker run script.
 
-A real configuration file to deploy yii2 api project.
+An example of `depler.json` which is passed with command `depler deploy --config depler.json`.
+Take a look at `${SSH_PRIVATE_KEY}`: this will be replaced with actual env value where depler command was launched.
+
+Next logic will be applied to the commands when it shows inside the console: `--build-arg SOME_VARIABLE="..."` will be turned into `--build-arg SOME_VARIABLE="*****"`, `--env SOME_VARIABLE="..."` will be turned into `--env SOME_VARIABLE="*****"` for the console outputs.
+It is useful when you pass secrets inside env variables.
+You can `echo` variables before depler to ensure that all variables exist in environment.  
+
 ```json
 {
   "commands": {
+    "build": {
+      "image": {
+        "build-arg": [
+          "SSH_PRIVATE_KEY=\"$SSH_PRIVATE_KEY\""
+        ]
+      }
+    },
+
     "run": {
       "container": {
         "publish": "8013:80",
