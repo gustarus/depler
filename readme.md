@@ -48,7 +48,7 @@ Add script to your package.json because commands usually too long to type them e
 ### Copy-and-paste source code to remote host → build docker image remotely → run docker container remotely
 Take a look at this command.
 ```bash
-depler deploy --code my-nodejs-app --host web@192.168.1.22 --as source --run-as container .
+depler deploy --code my-nodejs-app --host web@192.168.1.22 --as source .
 ```
 
 > Bro, deploy the app (`deploy`) for me with repository name `my-nodejs-app` (`--code`) to host `192.168.1.22` as user `web` (`--host`) using `source` strategy (`--as source`) and run it on port `8080` ([default config](defaults.json)).
@@ -58,7 +58,7 @@ The flag `---as source` tells tool that we should copy source code to remote hos
 ### Build docker image locally → transfer image to remote host → run docker container remotely
 Almost the same command, but instead of `--as source` we should pass `--as image` flag.
 ```bash
-depler deploy --code my-nodejs-app --host web@192.168.1.22 --as image --run-as container .
+depler deploy --code my-nodejs-app --host web@192.168.1.22 --as image .
 ```
 
 This flag tells tool that we should build image locally first → transfer it to remote host → run container on remote host.
@@ -70,7 +70,7 @@ So, my workaround is easy: deploy only source code of the app and build image re
 Take a look at this command.
 It says to the tool: *bro, deploy the app (`deploy`) with repository name `my-nodejs-app` (`--code`) to host `192.168.1.22` as user `web` (`--host`) using `source` strategy (`--as source`) and build the image with arg `FROM=arm64v8/node:10.16.1-buster-slim` (`--build-arg`) and run the container on port `8080` (default config)*.
 ```bash
-depler deploy --code my-nodejs-app --host web@192.168.1.22 --as source --run-as container --build-arg FROM=arm64v8/node:10.16.1-buster-slim .
+depler deploy --code my-nodejs-app --host web@192.168.1.22 --as source --build-arg FROM=arm64v8/node:10.16.1-buster-slim .
 ``` 
 
 My dockerfile for the app looks like below.
