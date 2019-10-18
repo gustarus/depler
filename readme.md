@@ -158,7 +158,7 @@ You can `echo` variables before depler to ensure that all variables exist in env
     "build": {
       "image": {
         "build-arg": [
-          "SSH_PRIVATE_KEY=\"$SSH_PRIVATE_KEY\""
+          "SSH_PRIVATE_KEY=\"${SSH_PRIVATE_KEY}\""
         ]
       }
     },
