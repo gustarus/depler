@@ -1,6 +1,6 @@
 {
   "name": "depler",
-  "version": "1.7.3",
+  "version": "1.7.4",
   "description": "Deploy docker app to remote host easily without any dependencies like registry or swarm.",
   "main": "index.js",
   "author": "Pavel Kondratenko <iam@kondratenko.me>",
