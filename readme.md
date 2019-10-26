@@ -152,6 +152,8 @@ Next logic will be applied to the commands when it shows inside the console: `--
 It is useful when you pass secrets inside env variables.
 You can `echo` variables before depler to ensure that all variables exist in environment.  
 
+Do not forget to add `"${VALUE}"` to correctly provide env variables values.
+
 ```json
 {
   "commands": {
@@ -169,10 +171,10 @@ You can `echo` variables before depler to ensure that all variables exist in env
         "volume": "/data/ceater/uploads:/app/web/uploads",
         "network": "webulla-ceater",
         "env": [
-          "MYSQL_HOST=webulla-ceater-database",
-          "MYSQL_DATABASE=data",
-          "MYSQL_ROOT_USER=USER",
-          "MYSQL_ROOT_PASSWORD=PASSWORD"
+          "MYSQL_HOST=\"webulla-ceater-database\"",
+          "MYSQL_DATABASE=\"data\"",
+          "MYSQL_ROOT_USER=\"USER\"",
+          "MYSQL_ROOT_PASSWORD=\"PASSWORD\""
         ]
       }
     }
