@@ -144,7 +144,7 @@ program
 
     displayCommandStep(cmd, 'Checking for already running containers');
 
-    const listCommand = new Command(`docker ps -a -q --filter "name=${name}" --format="{{.ID}}"`);
+    const listCommand = new Command(`docker ps -a -q --filter "name=^${name}$" --format="{{.ID}}"`);
     const psResult = execSyncProgressReturn(entry ? new Command(entry, listCommand) : listCommand);
     if (psResult) {
       displayCommandStep(cmd, 'Stopping and removing running containers');
@@ -245,9 +245,6 @@ program
         execSyncProgressDisplay(`${exec} load`, { tag, host, config }); // load the image to the remote docker
         break;
     }
-
-    console.log('');
-    execSyncProgressDisplay(`${exec} exit`, { tag, host, config }); // stop and remove running containers with the same tag
 
     console.log('');
     execSyncProgressDisplay(`${exec} run`, { tag, host, config }); // start the container on the remote
