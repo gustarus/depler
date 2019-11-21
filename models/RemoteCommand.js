@@ -24,7 +24,10 @@ module.exports = class RemoteCommand extends Command {
     const child = super.compile({ ...options, wrap: false });
 
     // get all proxy variables
-    const variables = this.with.map((variable) => variable.trim().replace(/^\$/, ''));
+    // skip raw values
+    const variables = this.with
+      .filter((variable) => variable.trim().match(/^\$/))
+      .map((variable) => variable.trim().replace(/^\$/, ''));
 
 
     // create exports commands to export all variables aliases
