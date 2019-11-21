@@ -8,23 +8,23 @@ const getUniqueValues = require('./../helpers/getUniqueValues');
 const displayCommandDone = require('./../helpers/displayCommandDone');
 const RemoteCommand = require('./../models/RemoteCommand');
 const Command = require('./../models/Command');
-const { TAG_FORMAT_PATTERN, ALIAS_FORMAT_PATTERN } = require('./../constants');
+const { TAG_FORMAT_PATTERN, SIGN_FORMAT_PATTERN } = require('./../constants');
 
 module.exports = function run(program) {
   program
     .command('run')
     .description('Run container on remote host')
     .option('--tag <code:latest>', 'Docker image tag to run on remote host')
-    .option('--alias <name>', 'Docker image name alias to run as')
+    .option('--sign <name>', 'Docker image name sign to run as')
     .option('--host <john@example.com>', 'Host where to run docker container')
     .option('--config <path>', 'Use custom config for the command')
     .action((cmd) => {
       displayCommandGreetings(cmd);
       requiredOption(cmd, 'tag', TAG_FORMAT_PATTERN);
-      requiredOption(cmd, 'alias', ALIAS_FORMAT_PATTERN);
+      requiredOption(cmd, 'sign', SIGN_FORMAT_PATTERN);
       requiredOption(cmd, 'host');
       const config = loadCommandConfig(cmd);
-      const { tag, alias } = config;
+      const { tag, sign } = config;
 
       if (config.container.network) {
         displayCommandStep(cmd, 'Creating required networks');
@@ -40,7 +40,7 @@ module.exports = function run(program) {
 
       displayCommandStep(cmd, 'Checking for already running containers');
 
-      const listCommand = new Command(`docker ps -a -q --filter "name=^${alias}$" --format="{{.ID}}"`);
+      const listCommand = new Command(`docker ps -a -q --filter "name=^${sign}$" --format="{{.ID}}"`);
       const listCommandWrapped = cmd.host ? new RemoteCommand(cmd.host, listCommand) : listCommand;
       const psResult = execSyncProgressReturn(listCommandWrapped);
       if (psResult) {
@@ -55,7 +55,7 @@ module.exports = function run(program) {
 
       displayCommandStep(cmd, `Run the image as a container`);
 
-      const runCommand = new Command('docker run', { name: alias }, config.container, tag);
+      const runCommand = new Command('docker run', { name: sign }, config.container, tag);
       const runCommandWrapped = cmd.host ? new RemoteCommand(cmd.host, runCommand) : runCommand;
       execSyncProgressDisplay(runCommandWrapped);
 

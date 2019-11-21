@@ -35,7 +35,7 @@ module.exports = function deploy(program) {
       const releaseTag = `${code}:${release}`;
       const registryTag = resolveRegistryTagFromConfig(loadedConfig);
       const tag = cmd.as === AS_REGISTRY ? registryTag : releaseTag;
-      const alias = cmd.code;
+      const sign = cmd.code;
 
       // get runtime variables
       const { host, config } = cmd;
@@ -95,7 +95,7 @@ module.exports = function deploy(program) {
       }
 
       console.log('');
-      execSyncProgressDisplay(`${exec} run`, { tag, alias, host, config }); // start the container on the remote
+      execSyncProgressDisplay(`${exec} run`, { tag, sign, host, config }); // start the container on the remote
 
       console.log('');
       execSyncProgressDisplay(`${exec} clean`, { tag, host, config }); // clean local and remote after deploy
