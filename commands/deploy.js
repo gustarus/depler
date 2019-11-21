@@ -5,7 +5,9 @@ const displayCommandStep = require('./../helpers/displayCommandStep');
 const execSyncProgressDisplay = require('./../helpers/execSyncProgressDisplay');
 const getPathToTemporarySourceCode = require('./../helpers/getPathToTemporarySourceCode');
 const displayCommandDone = require('./../helpers/displayCommandDone');
-const { PATH_TO_EXECUTABLE, DEPLOY_AS_FORMAT_PATTERN } = require('./../constants');
+const resolveRegistryTagFromConfig = require('./../helpers/resolveRegistryTagFromConfig');
+const loadCommandConfig = require('./../helpers/loadCommandConfig');
+const { PATH_TO_EXECUTABLE, AS_IMAGE, AS_SOURCE, AS_REGISTRY, DEPLOY_AS_FORMAT_PATTERN } = require('./../constants');
 
 module.exports = function deploy(program) {
   program
@@ -22,6 +24,7 @@ module.exports = function deploy(program) {
       requiredOption(cmd, 'as', DEPLOY_AS_FORMAT_PATTERN);
       requiredOption(cmd, 'code');
       requiredOption(cmd, 'host');
+      const loadedConfig = loadCommandConfig(cmd);
 
       // get execution command
       const exec = `node ${PATH_TO_EXECUTABLE}`;
@@ -29,7 +32,10 @@ module.exports = function deploy(program) {
       // get tag based on latest git commit
       const code = cmd.code;
       const release = cmd.release || getLatestCommitHash(path);
-      const tag = `${code}:${release}`;
+      const releaseTag = `${code}:${release}`;
+      const registryTag = resolveRegistryTagFromConfig(loadedConfig);
+      const tag = cmd.as === AS_REGISTRY ? registryTag : releaseTag;
+      const name = cmd.code;
 
       // get runtime variables
       const { host, config } = cmd;
@@ -38,7 +44,7 @@ module.exports = function deploy(program) {
       execSyncProgressDisplay(`${exec} clean`, { tag, host, config }); // clean local and remote before deploy
 
       switch (cmd.as) {
-        case 'source': // deploy source code as files and build on the remote host
+        case AS_SOURCE: // deploy source code as files and build on the remote host
           console.log('');
           displayCommandStep(cmd, 'Deploy source code as files and build on the remote host');
 
@@ -50,7 +56,7 @@ module.exports = function deploy(program) {
           execSyncProgressDisplay(`${exec} build`, { tag, host, config }, tmp); // build the image on the remote
           break;
 
-        case 'image': // build locally and transfer image to the remote host
+        case AS_IMAGE: // build locally and transfer image to the remote host
           console.log('');
           displayCommandStep(cmd, 'Build locally and transfer image to the remote host');
 
@@ -67,7 +73,7 @@ module.exports = function deploy(program) {
           execSyncProgressDisplay(`${exec} load`, { tag, host, config }); // load the image to the remote docker
           break;
 
-        case 'registry': // build locally and transfer image through registry
+        case AS_REGISTRY: // build locally and transfer image through registry
           console.log('');
           displayCommandStep(cmd, 'Build locally and transfer image to the remote host through registry');
 
@@ -89,7 +95,7 @@ module.exports = function deploy(program) {
       }
 
       console.log('');
-      execSyncProgressDisplay(`${exec} run`, { tag, host, config }); // start the container on the remote
+      execSyncProgressDisplay(`${exec} run`, { tag, name, host, config }); // start the container on the remote
 
       console.log('');
       execSyncProgressDisplay(`${exec} clean`, { tag, host, config }); // clean local and remote after deploy

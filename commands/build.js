@@ -1,7 +1,6 @@
 const displayCommandGreetings = require('./../helpers/displayCommandGreetings');
 const requiredOption = require('./../helpers/requiredOption');
 const loadCommandConfig = require('./../helpers/loadCommandConfig');
-const resolveTagsFromConfig = require('./../helpers/resolveTagsFromConfig');
 const execSyncProgressDisplay = require('./../helpers/execSyncProgressDisplay');
 const displayCommandDone = require('./../helpers/displayCommandDone');
 const Command = require('./../models/Command');
@@ -19,10 +18,10 @@ module.exports = function build(program) {
       displayCommandGreetings(cmd);
       requiredOption(cmd, 'tag', TAG_FORMAT_PATTERN);
       const config = loadCommandConfig(cmd);
-      const tags = resolveTagsFromConfig(config);
+      const { tag } = config;
 
       // get ssh prefix command if remote build requested
-      const mainCommand = new Command('docker', 'build', { tag: tags }, config.image, path);
+      const mainCommand = new Command('docker', 'build', { tag }, config.image, path);
       execSyncProgressDisplay(cmd.host ? new Command('ssh', cmd.host, mainCommand) : mainCommand);
       displayCommandDone(cmd);
     });
