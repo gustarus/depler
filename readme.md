@@ -211,7 +211,7 @@ To login into registry on remote host we transfer environment variables like `us
     "registry": {
       "host": "$CI_REGISTRY",
       "path": "$CI_PROJECT_PATH",
-      "username": "$CI_REGISTRY_USER",
+      "username": "gitlab-ci-token",
       "password": "$CI_JOB_TOKEN"
     }
   }
