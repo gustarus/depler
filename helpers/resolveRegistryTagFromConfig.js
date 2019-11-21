@@ -6,10 +6,5 @@ module.exports = function resolveRegistryTagFromConfig(config) {
     return false;
   }
 
-  let version = 'latest';
-  if (config.tag && config.tag.includes(':')) {
-    version = config.tag.split(':')[1];
-  }
-
-  return `${registry.host}/${registry.path}:${version}`;
+  return `${registry.host}/${registry.path}:latest`;
 };
