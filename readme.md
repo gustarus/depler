@@ -100,26 +100,32 @@ Option | Example | Default | Description
 `--code` | `code` | - | Code of the image for tagging. | 
 `--release` | `gelborg` | Latest git commit short hash, for example: `b2508fe`. | Release version of the image for tagging. |
 `--host` | `john@example.com` | - | Host where to run docker container. |
-`--as` | `source` or `image` | - | Define deploy scenario:<br/>`source`: deploy source code as files and build on the remote host without files under the .gitignore;<br/>`image`: build locally and transfer image to the remote host. |
+`--as` | `source` or `image` or `registry` | - | Define deploy scenario:<br/>`source`: deploy source code as files and build on the remote host without files under the .gitignore;<br/>`image`: build locally and transfer image to the remote host. |
 `--build-arg` | `FROM=node:10.16` | - | Pass build args as to docker build |
 `--no-cache` | - | - | Do not use cache when building the image |
 `--config` | - | - | Pass path to custom config file. |
 `--help` | - | - | Show help readme. |
 
-#### `--as source` vs. `--as image`
+#### `--as source` vs. `--as image` vs `--as registry`
 Which to chose? 
 
-The first one (`--as source`) tells tool to use the next flow:
+The first one (`--as source`) tells the tool to use the next flow:
 1. Copy-and-paste source code from local folder to remote host into `/tmp/...` folder.
 2. Build docker image on remote host via ssh from source code from `/tmp/...` folder.
 3. Run docker container on remote host.
 
-The second one (`--as image`) tells tool to use the another flow:
+The second one (`--as image`) tells the tool to use the next flow:
 1. Build docker image locally.
 2. Archive image to `.tar` file and put it into local `/tmp/...` folder.
 3. Transfer archive to remote host and put it into `/tmp/...` remote folder.
 4. Load archive to docker from `/tmp/...` folder.
 5. Run docker container on remote host.
+
+The third one (`--as registry`) tells the tool to use the next flow:
+1. Build docker image locally.
+2. Push image to registry.
+3. Pull image from registry inside remote host.
+4. Run pulled docker container on remote host.
 
 I prefer to use the second scenario (`--as image`).
 
@@ -134,6 +140,9 @@ build [options] <path> | Build docker image from source code: local and remote b
 archive [options] | Archive image to temporary file.
 transfer [options] | Transfer image archive to remote host.
 load [options] | Load image from archive on remote host.
+login [options] | Login into registry locally or inside remote host.
+push [options] | Push image to docker registry.
+pull [options] | Pull image from registry to remote host.
 exit [options] | Stop and remove running container.
 run [options] | Run container on remote host.
 clean [options] | Clean local and remote hosts.
@@ -156,6 +165,14 @@ Do not forget to add `"${VALUE}"` to correctly provide env variables values.
 
 ```json
 {
+  "default": {
+    "registry": {
+      "host": "$CI_REGISTRY",
+      "path": "$CI_PROJECT_PATH",
+      "username": "gitlab-ci-token",
+      "password": "$CI_JOB_TOKEN"
+    }
+  },
   "commands": {
     "build": {
       "image": {
@@ -180,10 +197,23 @@ Do not forget to add `"${VALUE}"` to correctly provide env variables values.
     }
   }
 }
-
 ```
 
+### Configure registry
+Define the following structure inside your `depler.json`.
+Where `host` - registry host like `registry.example.com`; `path` - path to your project, for example, inside gitlab like `gitlab-org/gitlab-foss`; `username` - registry user login; `password` - registry password.
+All registry options could be environment variables.
+To login into registry on remote host we transfer environment variables like `username` or `password` onto remote host ([see example here](https://superuser.com/a/163228)). 
 
-## To be done
-* [ ] Automatically run `docker swarm init` on remote host.
-* [ ] Additional overrides for the commands via `settings.json`.
+```json
+{
+  "default": {
+    "registry": {
+      "host": "$CI_REGISTRY",
+      "path": "$CI_PROJECT_PATH",
+      "username": "gitlab-ci-token",
+      "password": "$CI_JOB_TOKEN"
+    }
+  }
+}
+```
