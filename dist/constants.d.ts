@@ -1,6 +1,7 @@
 export declare const PATH_TO_ROOT: string;
 export declare const PATH_TO_PACKAGE: string;
 export declare const PATH_TO_RUNTIME: string;
+export declare const PATH_TO_TEMPLATE_SERVER: string;
 export declare const STRATEGY_AS_SOURCE = "source";
 export declare const STRATEGY_AS_IMAGE = "image";
 export declare const STRATEGY_AS_REGISTRY = "registry";

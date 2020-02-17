@@ -19,11 +19,13 @@ function deploy(program) {
         .command('deploy')
         .arguments('<path>')
         .description('Deploy container to the remote host')
+        .option('--config <path>', 'Use custom config for the command')
         .requiredOption('--code <code>', 'Code of the image for tagging')
         .requiredOption('--release <latest>', 'Release version of the image for tagging (latest git commit hash by default)')
         .requiredOption('--host <john@example.com>', 'Host where to run docker container')
         .requiredOption('--as <source|image|registry>', 'Deploy source code (source), transfer image to remote host (image) or use registry (registry)')
-        .option('--config <path>', 'Use custom config for the command')
+        .option('--with-publish', 'Publish docker container to the internet')
+        .option('--with-ssl', 'Install certificate for published to the internet container')
         .action((path, cmd) => {
         displayCommandGreetings_1.default(cmd);
         validateOptionFormat_1.default(cmd, 'as', constants_1.PATTERN_STRATEGY);

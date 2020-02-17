@@ -15,6 +15,7 @@ const resolvePackagePath_1 = __importDefault(require("./helpers/resolvePackagePa
 exports.PATH_TO_ROOT = resolvePackagePath_1.default(__dirname);
 exports.PATH_TO_PACKAGE = path.resolve(exports.PATH_TO_ROOT, 'package.json');
 exports.PATH_TO_RUNTIME = path.resolve(exports.PATH_TO_ROOT, 'runtime');
+exports.PATH_TO_TEMPLATE_SERVER = path.resolve(exports.PATH_TO_ROOT, 'templates', 'server.conf');
 exports.STRATEGY_AS_SOURCE = 'source';
 exports.STRATEGY_AS_IMAGE = 'image';
 exports.STRATEGY_AS_REGISTRY = 'registry';

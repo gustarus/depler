@@ -1,4 +1,4 @@
-import commander from 'commander';
+import * as commander from 'commander';
 import displayCommandGreetings from './../helpers/displayCommandGreetings';
 import validateOptionFormat from '../helpers/validateOptionFormat';
 import getPathToTemporaryArchive from './../helpers/getPathToTemporaryArchive';

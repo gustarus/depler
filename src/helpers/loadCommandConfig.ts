@@ -1,5 +1,5 @@
 import fs from 'fs';
-import commander from 'commander';
+import * as commander from 'commander';
 import colors from 'colors';
 import merge from 'lodash.merge';
 import loadEnvironmentVariables from './loadEnvironmentVariables';

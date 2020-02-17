@@ -1,4 +1,4 @@
-import commander from 'commander';
+import * as commander from 'commander';
 import displayCommandGreetings from './../helpers/displayCommandGreetings';
 import loadCommandConfig from './../helpers/loadCommandConfig';
 import execSyncProgressDisplay from './../helpers/execSyncProgressDisplay';
