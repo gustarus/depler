@@ -1,0 +1,11 @@
+export declare const PATH_TO_ROOT: string;
+export declare const PATH_TO_PACKAGE: string;
+export declare const PATH_TO_RUNTIME: string;
+export declare const STRATEGY_AS_SOURCE = "source";
+export declare const STRATEGY_AS_IMAGE = "image";
+export declare const STRATEGY_AS_REGISTRY = "registry";
+export declare const RUNTIME_FOLDER_PREFIX = "from-russia-with-love";
+export declare const PATTERN_STRATEGY: RegExp;
+export declare const PATTERN_TAG: RegExp;
+export declare const PATTERN_SIGN: RegExp;
+export declare const SECRET_MASK = "*****";
