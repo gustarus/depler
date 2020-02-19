@@ -19,7 +19,7 @@ npm i --save-dev depler
 
 Install globally to use `depler deploy` from everywhere.
 ```bash
-npm i --save-dev -g depler
+npm i -g depler
 ```
 
 **2. Expose port `80` in your dockerfile**
@@ -101,8 +101,6 @@ Option | Example | Default | Description
 `--release` | `gelborg` | Latest git commit short hash, for example: `b2508fe`. | Release version of the image for tagging. |
 `--host` | `john@example.com` | - | Host where to run docker container. |
 `--as` | `source` or `image` or `registry` | - | Define deploy scenario:<br/>`source`: deploy source code as files and build on the remote host without files under the .gitignore;<br/>`image`: build locally and transfer image to the remote host. |
-`--build-arg` | `FROM=node:10.16` | - | Pass build args as to docker build |
-`--no-cache` | - | - | Do not use cache when building the image |
 `--config` | - | - | Pass path to custom config file. |
 `--help` | - | - | Show help readme. |
 
@@ -129,7 +127,7 @@ The third one (`--as registry`) tells the tool to use the next flow:
 
 I prefer to use the second scenario (`--as image`).
 
-### Other commands
+## Other commands
 All other commands from this tool are not usable as standalone commands.
 But, if something went wrong, you can just rerun failed command with logged arguments.
 
@@ -147,8 +145,10 @@ exit [options] | Stop and remove running container.
 run [options] | Run container on remote host.
 clean [options] | Clean local and remote hosts.
 deploy [options] <path> | Deploy container to the remote host.
+publish [options] <path> | Publish web site with nginx tool.
+ssl [options] <path> | Generate ssl certificate for the site.
 
-### Overrides for commands
+## Overrides for commands
 There is an ability to override some commands like `docker run` or `docker build`.
 You can pass custom arguments to this commands through `.json` settings file with `--config` argument.
 Section `default` will be used for all commands.
@@ -165,41 +165,32 @@ Do not forget to add `"${VALUE}"` to correctly provide env variables values.
 
 ```json
 {
-  "default": {
     "registry": {
-      "host": "$CI_REGISTRY",
-      "path": "$CI_PROJECT_PATH",
-      "username": "gitlab-ci-token",
-      "password": "$CI_JOB_TOKEN"
-    }
-  },
-  "commands": {
-    "build": {
-      "image": {
+        "host": "$CI_REGISTRY",
+        "path": "$CI_PROJECT_PATH",
+        "username": "gitlab-ci-token",
+        "password": "$CI_JOB_TOKEN"
+    },
+    "image": {
         "build-arg": [
           "SSH_PRIVATE_KEY=\"${SSH_PRIVATE_KEY}\""
         ]
-      }
     },
-
-    "run": {
-      "container": {
+    "container": {
         "publish": "8013:80",
         "volume": "/data/ceater/uploads:/app/web/uploads",
         "network": "webulla-ceater",
         "env": [
-          "MYSQL_HOST=\"webulla-ceater-database\"",
-          "MYSQL_DATABASE=\"data\"",
-          "MYSQL_ROOT_USER=\"USER\"",
-          "MYSQL_ROOT_PASSWORD=\"PASSWORD\""
+            "MYSQL_HOST=\"webulla-ceater-database\"",
+            "MYSQL_DATABASE=\"data\"",
+            "MYSQL_ROOT_USER=\"USER\"",
+            "MYSQL_ROOT_PASSWORD=\"PASSWORD\""
         ]
-      }
     }
-  }
 }
 ```
 
-### Configure registry
+## Configure registry
 Define the following structure inside your `depler.json`.
 Where `host` - registry host like `registry.example.com`; `path` - path to your project, for example, inside gitlab like `gitlab-org/gitlab-foss`; `username` - registry user login; `password` - registry password.
 All registry options could be environment variables.
@@ -207,13 +198,15 @@ To login into registry on remote host we transfer environment variables like `us
 
 ```json
 {
-  "default": {
     "registry": {
-      "host": "$CI_REGISTRY",
-      "path": "$CI_PROJECT_PATH",
-      "username": "gitlab-ci-token",
-      "password": "$CI_JOB_TOKEN"
+        "host": "$CI_REGISTRY",
+        "path": "$CI_PROJECT_PATH",
+        "username": "gitlab-ci-token",
+        "password": "$CI_JOB_TOKEN"
     }
-  }
 }
 ```
+
+## Full configuration file
+Take a look at the [type definition](src/models/Config.ts#L14).
+Also take a look at [the default configuration](src/defaults.json).
