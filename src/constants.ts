@@ -14,6 +14,5 @@ export const RUNTIME_FOLDER_PREFIX = 'from-russia-with-love';
 
 export const PATTERN_STRATEGY = /^(source|image|registry)$/;
 export const PATTERN_TAG = /^[.\/\w\d-_]+:[\w\d-_]+$/;
-export const PATTERN_SIGN = /^[\/\w\d-_]+$/;
 
 export const SECRET_MASK = '*****';

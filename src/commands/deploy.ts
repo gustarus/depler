@@ -8,7 +8,7 @@ import execSyncProgressDisplay from './../helpers/execSyncProgressDisplay';
 import getPathToTemporarySourceCode from './../helpers/getPathToTemporarySourceCode';
 import displayCommandDone from './../helpers/displayCommandDone';
 import resolveRegistryTagFromConfig from './../helpers/resolveRegistryTagFromConfig';
-import loadCommandConfig from './../helpers/loadCommandConfig';
+import loadConfig from '../helpers/loadConfig';
 import { STRATEGY_AS_IMAGE, STRATEGY_AS_SOURCE, STRATEGY_AS_REGISTRY, PATTERN_STRATEGY } from './../constants';
 
 export default function deploy(program: commander.Command) {
@@ -16,40 +16,33 @@ export default function deploy(program: commander.Command) {
     .command('deploy')
     .arguments('<path>')
     .description('Deploy container to the remote host')
-    .option('--config <path>', 'Use custom config for the command')
     .requiredOption('--code <code>', 'Code of the image for tagging')
-    .requiredOption('--release <latest>', 'Release version of the image for tagging (latest git commit hash by default)')
     .requiredOption('--host <john@example.com>', 'Host where to run docker container')
     .requiredOption('--as <source|image|registry>', 'Deploy source code (source), transfer image to remote host (image) or use registry (registry)')
-    .option('--with-publish', 'Publish docker container to the internet')
-    .option('--with-ssl', 'Install certificate for published to the internet container')
+    .option('--release <latest>', 'Release version of the image for tagging (latest git commit hash by default)')
+    .option('--config <path>', 'Use custom config for the command')
     .action((path, cmd) => {
       displayCommandGreetings(cmd);
       validateOptionFormat(cmd, 'as', PATTERN_STRATEGY);
-      const loadedConfig = loadCommandConfig(cmd);
+      const { code, release, as, host, config, registry, public: _public, ssl } = loadConfig(cmd);
 
       // get execution command
       const exec = resolveExecutable();
 
       // get tag based on latest git commit
-      const code = cmd.code;
-      const release = cmd.release || getLatestCommitHash(path);
-      const releaseTag = `${code}:${release}`;
-      const registryTag = resolveRegistryTagFromConfig(loadedConfig);
-      const tag = cmd.as === STRATEGY_AS_REGISTRY ? registryTag : releaseTag;
-      const sign = cmd.code;
+      const releaseResolved = release || getLatestCommitHash(path);
+      const releaseTag = `${code}:${releaseResolved}`;
+      const registryTag = resolveRegistryTagFromConfig(registry);
+      const tag = as === STRATEGY_AS_REGISTRY ? registryTag : releaseTag;
 
       if (!tag) {
         throw new Error('Unable to resolve container tag');
       }
 
-      // get runtime variables
-      const { host, config } = cmd;
-
       console.log('');
       execSyncProgressDisplay(`${exec} clean`, { tag, host, config }); // clean local and remote before deploy
 
-      switch (cmd.as) {
+      switch (as) {
         case STRATEGY_AS_SOURCE: // deploy source code as files and build on the remote host
           console.log('');
           displayCommandStep(cmd, 'Deploy source code as files and build on the remote host');
@@ -58,7 +51,7 @@ export default function deploy(program: commander.Command) {
           execSyncProgressDisplay(`${exec} upload`, { tag, host, config }, path); // upload source code to the remote
 
           console.log('');
-          const tmp = getPathToTemporarySourceCode(tag); // get path to tmp folder with source code
+          const tmp = getPathToTemporarySourceCode(tag as string); // get path to tmp folder with source code
           execSyncProgressDisplay(`${exec} build`, { tag, host, config }, tmp); // build the image on the remote
           break;
 
@@ -101,7 +94,7 @@ export default function deploy(program: commander.Command) {
       }
 
       console.log('');
-      execSyncProgressDisplay(`${exec} run`, { tag, sign, host, config }); // start the container on the remote
+      execSyncProgressDisplay(`${exec} run`, { tag, host, config }); // start the container on the remote
 
       console.log('');
       execSyncProgressDisplay(`${exec} clean`, { tag, host, config }); // clean local and remote after deploy

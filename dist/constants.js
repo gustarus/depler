@@ -22,5 +22,4 @@ exports.STRATEGY_AS_REGISTRY = 'registry';
 exports.RUNTIME_FOLDER_PREFIX = 'from-russia-with-love';
 exports.PATTERN_STRATEGY = /^(source|image|registry)$/;
 exports.PATTERN_TAG = /^[.\/\w\d-_]+:[\w\d-_]+$/;
-exports.PATTERN_SIGN = /^[\/\w\d-_]+$/;
 exports.SECRET_MASK = '*****';

@@ -6,8 +6,9 @@ import validatePathExists from '../helpers/validatePathExists';
 import execSyncProgressDisplay from './../helpers/execSyncProgressDisplay';
 import displayCommandDone from './../helpers/displayCommandDone';
 import { PATTERN_TAG } from './../constants';
+import loadConfig from '../helpers/loadConfig';
 
-export default function transfer(program:commander.Command) {
+export default function transfer(program: commander.Command) {
   program
     .command('transfer')
     .description('Transfer image archive to remote host')
@@ -17,13 +18,14 @@ export default function transfer(program:commander.Command) {
     .action((cmd) => {
       displayCommandGreetings(cmd);
       validateOptionFormat(cmd, 'tag', PATTERN_TAG);
+      const { tag, host } = loadConfig(cmd);
 
       // get path to temporary archive and validate it
-      const archive = getPathToTemporaryArchive(cmd.tag);
+      const archive = getPathToTemporaryArchive(tag);
       validatePathExists(archive, `The archive doesn\'t exist: ${archive}.`);
 
       // transfer container archive to remote host
-      execSyncProgressDisplay(`scp ${archive} ${cmd.host}:${archive}`);
+      execSyncProgressDisplay(`scp ${archive} ${host}:${archive}`);
       execSyncProgressDisplay(`rm -rf ${archive}`);
 
       displayCommandDone(cmd);

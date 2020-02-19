@@ -12,7 +12,7 @@ const clean_1 = __importDefault(require("./commands/clean"));
 const deploy_1 = __importDefault(require("./commands/deploy"));
 const load_1 = __importDefault(require("./commands/load"));
 const login_1 = __importDefault(require("./commands/login"));
-const nginx_1 = __importDefault(require("./commands/nginx"));
+const publish_1 = __importDefault(require("./commands/publish"));
 const pull_1 = __importDefault(require("./commands/pull"));
 const push_1 = __importDefault(require("./commands/push"));
 const run_1 = __importDefault(require("./commands/run"));
@@ -34,7 +34,7 @@ clean_1.default(commander_1.default);
 deploy_1.default(commander_1.default);
 load_1.default(commander_1.default);
 login_1.default(commander_1.default);
-nginx_1.default(commander_1.default);
+publish_1.default(commander_1.default);
 pull_1.default(commander_1.default);
 push_1.default(commander_1.default);
 run_1.default(commander_1.default);
@@ -53,7 +53,9 @@ if (!process.argv.slice(2).length) {
     commander_1.default.help();
 }
 function processError(error) {
-    console.log(colors_1.default.red.bold(error.toString()));
-    console.log(error);
-    process.exit(1);
+    if (typeof error.exitCode === 'undefined' || error.exitCode > 0) {
+        console.log(colors_1.default.red.bold(error.toString()));
+        console.log(error);
+        process.exit(1);
+    }
 }

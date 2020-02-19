@@ -18,43 +18,43 @@ const path = __importStar(require("path"));
 const createFileFromTemplate_1 = __importDefault(require("../helpers/createFileFromTemplate"));
 const RemoteCommand_1 = __importDefault(require("../models/RemoteCommand"));
 const Command_1 = __importDefault(require("../models/Command"));
-function nginx(program) {
+const formatter_1 = __importDefault(require("../instances/formatter"));
+const loadConfig_1 = __importDefault(require("../helpers/loadConfig"));
+function publish(program) {
     program
-        .command('nginx')
-        .description('Create nginx server name to proxy requests to docker container from target node')
+        .command('publish')
+        .description('Publish web site to the internet from remote server')
         .option('--host <john@example.com>', 'Host where to login to configure nginx')
-        .requiredOption('--source-name <example.com>', 'Server name for nginx configuration')
-        .requiredOption('--source-port <80>', 'Port to listen for passed server name', '80')
-        .requiredOption('--target-name <localhost>', 'Target server name to proxy requests', 'localhost')
-        .requiredOption('--target-port <8000>', 'Target server port to proxy requests')
-        .requiredOption('--path-to-sites </etc/nginx/sites>', 'Path to publish server configuration', '/etc/nginx/sites')
-        .requiredOption('--with-restart', 'Restart nginx after configuration', false)
         .option('--config <path>', 'Use custom config for the command')
         .action((cmd) => {
         displayCommandGreetings_1.default(cmd);
-        const { host, sourceName, sourcePort, targetName, targetPort, pathToSites, withRestart } = cmd;
+        const { host, public: _public, proxy: _proxy } = loadConfig_1.default(cmd);
+        // validate publishing tool
+        if (_public.tool !== 'nginx') {
+            throw new Error('Only nginx publishing tool currently supported');
+        }
         // create nginx configuration from template
         const pathToTemplateRuntime = path.resolve(constants_1.PATH_TO_RUNTIME, 'server.conf');
         createFileFromTemplate_1.default(constants_1.PATH_TO_TEMPLATE_SERVER, pathToTemplateRuntime, {
-            SERVER_NAME: sourceName,
-            SERVER_PORT: sourcePort,
-            TARGET_NAME: targetName,
-            TARGET_PORT: targetPort,
+            SERVER_NAME: _public.name,
+            SERVER_PORT: _public.port,
+            TARGET_NAME: _proxy.name,
+            TARGET_PORT: _proxy.port,
         });
         // copy configuration to remote server if required
-        const scpTargetPath = `${pathToSites}/${sourceName}`;
+        const scpTargetPath = `${_public.directory}/${_public.name}`;
         const scpTargetCommand = host ? `${host}:${scpTargetPath}` : scpTargetPath;
-        const command = new Command_1.default({ parts: ['scp', pathToTemplateRuntime, scpTargetCommand] });
+        const command = new Command_1.default({ formatter: formatter_1.default, parts: ['scp', pathToTemplateRuntime, scpTargetCommand] });
         execSyncProgressDisplay_1.default(command);
-        // restart nginx if required
-        if (withRestart) {
-            const restartCommand = new Command_1.default({ parts: ['sudo', 'service', 'nginx', 'restart'] });
-            const restartCommandRemoteConfig = { host, parts: [restartCommand] };
+        // restart tool if required
+        if (_public.restart) {
+            const restartCommand = new Command_1.default({ formatter: formatter_1.default, parts: ['sudo', 'service', 'nginx', 'restart'] });
+            const restartCommandRemoteConfig = { formatter: formatter_1.default, host, parts: [restartCommand] };
             const restartCommandWrapped = host ? new RemoteCommand_1.default(restartCommandRemoteConfig) : restartCommand;
             execSyncProgressDisplay_1.default(restartCommandWrapped);
         }
         displayCommandDone_1.default(cmd);
     });
 }
-exports.default = nginx;
+exports.default = publish;
 ;

@@ -4,6 +4,7 @@ import validateOptionFormat from '../helpers/validateOptionFormat';
 import getPathToTemporaryArchive from './../helpers/getPathToTemporaryArchive';
 import execSyncProgressDisplay from './../helpers/execSyncProgressDisplay';
 import displayCommandDone from './../helpers/displayCommandDone';
+import loadConfig from '../helpers/loadConfig';
 import { PATTERN_TAG } from './../constants';
 
 export default function archive(program: commander.Command) {
@@ -15,10 +16,11 @@ export default function archive(program: commander.Command) {
     .action((cmd) => {
       displayCommandGreetings(cmd);
       validateOptionFormat(cmd, 'tag', PATTERN_TAG);
+      const { tag } = loadConfig(cmd);
 
       // get path to temporary archive and archive the image
-      const archive = getPathToTemporaryArchive(cmd.tag);
-      execSyncProgressDisplay(`docker save -o ${archive} ${cmd.tag}`);
+      const archive = getPathToTemporaryArchive(tag);
+      execSyncProgressDisplay(`docker save -o ${archive} ${tag}`);
 
       displayCommandDone(cmd);
     });

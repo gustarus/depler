@@ -1,6 +1,5 @@
 import * as commander from 'commander';
 import displayCommandGreetings from './../helpers/displayCommandGreetings';
-import loadCommandConfig from './../helpers/loadCommandConfig';
 import execSyncProgressDisplay from './../helpers/execSyncProgressDisplay';
 import displayCommandDone from './../helpers/displayCommandDone';
 import resolveRegistryTagFromConfig from './../helpers/resolveRegistryTagFromConfig';
@@ -8,6 +7,8 @@ import validateOptionFormat from '../helpers/validateOptionFormat';
 import RemoteCommand from './../models/RemoteCommand';
 import Command from './../models/Command';
 import { PATTERN_TAG } from './../constants';
+import loadConfig from '../helpers/loadConfig';
+import formatter from '../instances/formatter';
 
 export default function pull(program: commander.Command) {
   program
@@ -19,12 +20,12 @@ export default function pull(program: commander.Command) {
     .action((cmd) => {
       displayCommandGreetings(cmd);
       validateOptionFormat(cmd, 'tag', PATTERN_TAG);
-      const config = loadCommandConfig(cmd);
-      const registryTag = resolveRegistryTagFromConfig(config);
+      const { host, registry } = loadConfig(cmd);
+      const registryTag = resolveRegistryTagFromConfig(registry);
 
       // create shell command for docker login
-      const command = new Command({ parts: [`docker pull ${registryTag}`] });
-      const wrapped = cmd.host ? new RemoteCommand({ host: cmd.host, parts: [command] }) : command;
+      const command = new Command({ formatter, parts: [`docker pull ${registryTag}`] });
+      const wrapped = host ? new RemoteCommand({ formatter, host, parts: [command] }) : command;
 
       // execute shell command
       execSyncProgressDisplay(wrapped);

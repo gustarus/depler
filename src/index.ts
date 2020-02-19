@@ -8,7 +8,7 @@ import clean from './commands/clean';
 import deploy from './commands/deploy';
 import load from './commands/load';
 import login from './commands/login';
-import nginx from './commands/nginx';
+import publish from './commands/publish';
 import pull from './commands/pull';
 import push from './commands/push';
 import run from './commands/run';
@@ -33,7 +33,7 @@ clean(program);
 deploy(program);
 load(program);
 login(program);
-nginx(program);
+publish(program);
 pull(program);
 push(program);
 run(program);
@@ -56,8 +56,10 @@ if (!process.argv.slice(2).length) {
   program.help();
 }
 
-function processError(error: Error) {
-  console.log(colors.red.bold(error.toString()));
-  console.log(error);
-  process.exit(1);
+function processError(error: any) {
+  if (typeof error.exitCode === 'undefined' || error.exitCode > 0) {
+    console.log(colors.red.bold(error.toString()));
+    console.log(error);
+    process.exit(1);
+  }
 }

@@ -5,6 +5,8 @@ import getPathToTemporaryArchive from './../helpers/getPathToTemporaryArchive';
 import execSyncProgressDisplay from './../helpers/execSyncProgressDisplay';
 import displayCommandDone from './../helpers/displayCommandDone';
 import Command from './../models/Command';
+import loadConfig from '../helpers/loadConfig';
+import formatter from '../instances/formatter';
 import { PATTERN_TAG } from './../constants';
 
 export default function load(program: commander.Command) {
@@ -17,13 +19,14 @@ export default function load(program: commander.Command) {
     .action((cmd) => {
       displayCommandGreetings(cmd);
       validateOptionFormat(cmd, 'tag', PATTERN_TAG);
+      const { tag, host } = loadConfig(cmd);
 
       // get path to temporary archive and validate it
-      const archive = getPathToTemporaryArchive(cmd.tag);
+      const archive = getPathToTemporaryArchive(tag);
 
       // load docker container from archive
-      execSyncProgressDisplay('ssh', cmd.host, new Command({ parts: ['docker', 'load', '-i', archive] })); // TODO Use remote command tool.
-      execSyncProgressDisplay('ssh', cmd.host, new Command({ parts: ['rm', '-rf', archive] })); // TODO Use remote command tool.
+      execSyncProgressDisplay('ssh', host, new Command({ formatter, parts: ['docker', 'load', '-i', archive] })); // TODO Use remote command tool.
+      execSyncProgressDisplay('ssh', host, new Command({ formatter, parts: ['rm', '-rf', archive] })); // TODO Use remote command tool.
 
       displayCommandDone(cmd);
     });
