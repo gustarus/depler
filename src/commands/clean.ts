@@ -1,10 +1,11 @@
-import commander from 'commander';
+import * as commander from 'commander';
 import displayCommandGreetings from './../helpers/displayCommandGreetings';
 import validateOptionFormat from '../helpers/validateOptionFormat';
 import getPathToTemporarySourceCode from './../helpers/getPathToTemporarySourceCode';
 import getPathToTemporaryArchive from './../helpers/getPathToTemporaryArchive';
 import execSyncProgressDisplay from './../helpers/execSyncProgressDisplay';
 import displayCommandDone from './../helpers/displayCommandDone';
+import loadConfig from '../helpers/loadConfig';
 import { PATTERN_TAG } from './../constants';
 
 export default function clean(program: commander.Command) {
@@ -17,16 +18,17 @@ export default function clean(program: commander.Command) {
     .action((cmd) => {
       displayCommandGreetings(cmd);
       validateOptionFormat(cmd, 'tag', PATTERN_TAG);
+      const { tag, host } = loadConfig(cmd);
 
       // get path to temporary working directory
-      const tmp = getPathToTemporarySourceCode(cmd.tag);
+      const tmp = getPathToTemporarySourceCode(tag);
 
       // get path to temporary archive
-      const archive = getPathToTemporaryArchive(cmd.tag);
+      const archive = getPathToTemporaryArchive(tag);
 
       // execute clean scenario
       execSyncProgressDisplay(`rm -rf ${tmp} ${archive}`);
-      execSyncProgressDisplay(`ssh ${cmd.host} 'rm -rf ${tmp} ${archive}'`); // TODO Use remote command model.
+      execSyncProgressDisplay(`ssh ${host} 'rm -rf ${tmp} ${archive}'`); // TODO Use remote command model.
 
       displayCommandDone(cmd);
     });

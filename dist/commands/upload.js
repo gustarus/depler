@@ -10,6 +10,8 @@ const execSyncProgressDisplay_1 = __importDefault(require("./../helpers/execSync
 const displayCommandDone_1 = __importDefault(require("./../helpers/displayCommandDone"));
 const Command_1 = __importDefault(require("./../models/Command"));
 const constants_1 = require("./../constants");
+const loadConfig_1 = __importDefault(require("../helpers/loadConfig"));
+const formatter_1 = __importDefault(require("../instances/formatter"));
 function upload(program) {
     program
         .command('upload')
@@ -21,11 +23,12 @@ function upload(program) {
         .action((path, cmd) => {
         displayCommandGreetings_1.default(cmd);
         validateOptionFormat_1.default(cmd, 'tag', constants_1.PATTERN_TAG);
+        const { tag, host } = loadConfig_1.default(cmd);
         // get temporary folder to store source code on the remote
-        const tmp = getPathToTemporarySourceCode_1.default(cmd.tag);
+        const tmp = getPathToTemporarySourceCode_1.default(tag);
         // execute child command
-        execSyncProgressDisplay_1.default('ssh', cmd.host, new Command_1.default({ parts: ['rm', '-rf', tmp] })); // TODO Use remote command tool.
-        execSyncProgressDisplay_1.default(`rsync --exclude='/.git' --filter="dir-merge,- .gitignore" -az ${path}/ ${cmd.host}:${tmp}`);
+        execSyncProgressDisplay_1.default('ssh', host, new Command_1.default({ formatter: formatter_1.default, parts: ['rm', '-rf', tmp] })); // TODO Use remote command tool.
+        execSyncProgressDisplay_1.default(`rsync --exclude='/.git' --filter="dir-merge,- .gitignore" -az ${path}/ ${host}:${tmp}`);
         displayCommandDone_1.default(cmd);
     });
 }

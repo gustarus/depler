@@ -4,14 +4,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const execSyncProgressReturn_1 = __importDefault(require("./execSyncProgressReturn"));
-function resolveRegistryFromConfig(config) {
-    if (!config || !config.registry) {
+function resolveRegistryFromConfig(registry) {
+    if (!registry) {
         return false;
     }
-    const username = execSyncProgressReturn_1.default(`echo ${config.registry.username}`);
-    const password = config.registry.password;
-    const host = execSyncProgressReturn_1.default(`echo ${config.registry.host}`);
-    const path = execSyncProgressReturn_1.default(`echo ${config.registry.path}`);
+    const username = execSyncProgressReturn_1.default(`echo ${registry.username}`);
+    const password = registry.password;
+    const host = execSyncProgressReturn_1.default(`echo ${registry.host}`);
+    const path = execSyncProgressReturn_1.default(`echo ${registry.path}`);
     if (!username || !password || !host || !path) {
         return false;
     }

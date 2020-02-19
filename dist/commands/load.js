@@ -9,6 +9,8 @@ const getPathToTemporaryArchive_1 = __importDefault(require("./../helpers/getPat
 const execSyncProgressDisplay_1 = __importDefault(require("./../helpers/execSyncProgressDisplay"));
 const displayCommandDone_1 = __importDefault(require("./../helpers/displayCommandDone"));
 const Command_1 = __importDefault(require("./../models/Command"));
+const loadConfig_1 = __importDefault(require("../helpers/loadConfig"));
+const formatter_1 = __importDefault(require("../instances/formatter"));
 const constants_1 = require("./../constants");
 function load(program) {
     program
@@ -20,11 +22,12 @@ function load(program) {
         .action((cmd) => {
         displayCommandGreetings_1.default(cmd);
         validateOptionFormat_1.default(cmd, 'tag', constants_1.PATTERN_TAG);
+        const { tag, host } = loadConfig_1.default(cmd);
         // get path to temporary archive and validate it
-        const archive = getPathToTemporaryArchive_1.default(cmd.tag);
+        const archive = getPathToTemporaryArchive_1.default(tag);
         // load docker container from archive
-        execSyncProgressDisplay_1.default('ssh', cmd.host, new Command_1.default({ parts: ['docker', 'load', '-i', archive] })); // TODO Use remote command tool.
-        execSyncProgressDisplay_1.default('ssh', cmd.host, new Command_1.default({ parts: ['rm', '-rf', archive] })); // TODO Use remote command tool.
+        execSyncProgressDisplay_1.default('ssh', host, new Command_1.default({ formatter: formatter_1.default, parts: ['docker', 'load', '-i', archive] })); // TODO Use remote command tool.
+        execSyncProgressDisplay_1.default('ssh', host, new Command_1.default({ formatter: formatter_1.default, parts: ['rm', '-rf', archive] })); // TODO Use remote command tool.
         displayCommandDone_1.default(cmd);
     });
 }

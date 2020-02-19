@@ -10,6 +10,7 @@ const validatePathExists_1 = __importDefault(require("../helpers/validatePathExi
 const execSyncProgressDisplay_1 = __importDefault(require("./../helpers/execSyncProgressDisplay"));
 const displayCommandDone_1 = __importDefault(require("./../helpers/displayCommandDone"));
 const constants_1 = require("./../constants");
+const loadConfig_1 = __importDefault(require("../helpers/loadConfig"));
 function transfer(program) {
     program
         .command('transfer')
@@ -20,11 +21,12 @@ function transfer(program) {
         .action((cmd) => {
         displayCommandGreetings_1.default(cmd);
         validateOptionFormat_1.default(cmd, 'tag', constants_1.PATTERN_TAG);
+        const { tag, host } = loadConfig_1.default(cmd);
         // get path to temporary archive and validate it
-        const archive = getPathToTemporaryArchive_1.default(cmd.tag);
+        const archive = getPathToTemporaryArchive_1.default(tag);
         validatePathExists_1.default(archive, `The archive doesn\'t exist: ${archive}.`);
         // transfer container archive to remote host
-        execSyncProgressDisplay_1.default(`scp ${archive} ${cmd.host}:${archive}`);
+        execSyncProgressDisplay_1.default(`scp ${archive} ${host}:${archive}`);
         execSyncProgressDisplay_1.default(`rm -rf ${archive}`);
         displayCommandDone_1.default(cmd);
     });

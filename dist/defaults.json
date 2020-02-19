@@ -1,17 +1,37 @@
 {
-    "default": {},
-    "commands": {
-        "build": {
-            "image": {
-                "no-cache": true
-            }
-        },
-        "run": {
-            "container": {
-                "detach": true,
-                "restart": "unless-stopped",
-                "publish": "8000:80"
-            }
-        }
+    "as": "image",
+    "host": "",
+    "code": "",
+    "release": "",
+    "image": {
+        "no-cache": true
+    },
+    "container": {
+        "detach": true,
+        "restart": "unless-stopped",
+        "publish": "8000:80"
+    },
+    "public": {
+        "enabled": false,
+        "tool": "nginx",
+        "directory": "/etc/nginx/sites",
+        "port": "80",
+        "restart": true
+    },
+    "proxy": {
+        "enabled": true,
+        "name": "localhost"
+    },
+    "ssl": {
+        "enabled": false,
+        "restart": true
+    },
+    "certbot": {
+        "d": "",
+        "nginx": true,
+        "n": true,
+        "agree-tos": true,
+        "email": "foo@bar.com",
+        "redirect": true
     }
 }

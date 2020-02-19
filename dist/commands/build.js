@@ -5,11 +5,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const displayCommandGreetings_1 = __importDefault(require("./../helpers/displayCommandGreetings"));
 const validateOptionFormat_1 = __importDefault(require("../helpers/validateOptionFormat"));
-const loadCommandConfig_1 = __importDefault(require("./../helpers/loadCommandConfig"));
 const execSyncProgressDisplay_1 = __importDefault(require("./../helpers/execSyncProgressDisplay"));
 const displayCommandDone_1 = __importDefault(require("./../helpers/displayCommandDone"));
 const Command_1 = __importDefault(require("./../models/Command"));
 const RemoteCommand_1 = __importDefault(require("./../models/RemoteCommand"));
+const loadConfig_1 = __importDefault(require("../helpers/loadConfig"));
+const formatter_1 = __importDefault(require("../instances/formatter"));
 const constants_1 = require("./../constants");
 function build(program) {
     program
@@ -22,11 +23,10 @@ function build(program) {
         .action((path, cmd) => {
         displayCommandGreetings_1.default(cmd);
         validateOptionFormat_1.default(cmd, 'tag', constants_1.PATTERN_TAG);
-        const config = loadCommandConfig_1.default(cmd);
-        const { tag } = config;
+        const { tag, host, image } = loadConfig_1.default(cmd);
         // get ssh prefix command if remote build requested
-        const command = new Command_1.default({ parts: ['docker', 'build', { tag }, config.image, path] });
-        const wrapped = cmd.host ? new RemoteCommand_1.default({ host: cmd.host, parts: [command] }) : command;
+        const command = new Command_1.default({ formatter: formatter_1.default, parts: ['docker', 'build', { tag }, image, path] });
+        const wrapped = host ? new RemoteCommand_1.default({ formatter: formatter_1.default, host, parts: [command] }) : command;
         execSyncProgressDisplay_1.default(wrapped);
         displayCommandDone_1.default(cmd);
     });

@@ -12,7 +12,7 @@ const execSyncProgressDisplay_1 = __importDefault(require("./../helpers/execSync
 const getPathToTemporarySourceCode_1 = __importDefault(require("./../helpers/getPathToTemporarySourceCode"));
 const displayCommandDone_1 = __importDefault(require("./../helpers/displayCommandDone"));
 const resolveRegistryTagFromConfig_1 = __importDefault(require("./../helpers/resolveRegistryTagFromConfig"));
-const loadCommandConfig_1 = __importDefault(require("./../helpers/loadCommandConfig"));
+const loadConfig_1 = __importDefault(require("../helpers/loadConfig"));
 const constants_1 = require("./../constants");
 function deploy(program) {
     program
@@ -20,31 +20,27 @@ function deploy(program) {
         .arguments('<path>')
         .description('Deploy container to the remote host')
         .requiredOption('--code <code>', 'Code of the image for tagging')
-        .requiredOption('--release <latest>', 'Release version of the image for tagging (latest git commit hash by default)')
         .requiredOption('--host <john@example.com>', 'Host where to run docker container')
         .requiredOption('--as <source|image|registry>', 'Deploy source code (source), transfer image to remote host (image) or use registry (registry)')
+        .option('--release <latest>', 'Release version of the image for tagging (latest git commit hash by default)')
         .option('--config <path>', 'Use custom config for the command')
         .action((path, cmd) => {
         displayCommandGreetings_1.default(cmd);
         validateOptionFormat_1.default(cmd, 'as', constants_1.PATTERN_STRATEGY);
-        const loadedConfig = loadCommandConfig_1.default(cmd);
+        const { code, release, as, host, config, registry, public: _public, ssl } = loadConfig_1.default(cmd);
         // get execution command
         const exec = resolveExecutable_1.default();
         // get tag based on latest git commit
-        const code = cmd.code;
-        const release = cmd.release || getLatestCommitHash_1.default(path);
-        const releaseTag = `${code}:${release}`;
-        const registryTag = resolveRegistryTagFromConfig_1.default(loadedConfig);
-        const tag = cmd.as === constants_1.STRATEGY_AS_REGISTRY ? registryTag : releaseTag;
-        const sign = cmd.code;
+        const releaseResolved = release || getLatestCommitHash_1.default(path);
+        const releaseTag = `${code}:${releaseResolved}`;
+        const registryTag = resolveRegistryTagFromConfig_1.default(registry);
+        const tag = as === constants_1.STRATEGY_AS_REGISTRY ? registryTag : releaseTag;
         if (!tag) {
             throw new Error('Unable to resolve container tag');
         }
-        // get runtime variables
-        const { host, config } = cmd;
         console.log('');
         execSyncProgressDisplay_1.default(`${exec} clean`, { tag, host, config }); // clean local and remote before deploy
-        switch (cmd.as) {
+        switch (as) {
             case constants_1.STRATEGY_AS_SOURCE: // deploy source code as files and build on the remote host
                 console.log('');
                 displayCommandStep_1.default(cmd, 'Deploy source code as files and build on the remote host');
@@ -82,7 +78,7 @@ function deploy(program) {
                 break;
         }
         console.log('');
-        execSyncProgressDisplay_1.default(`${exec} run`, { tag, sign, host, config }); // start the container on the remote
+        execSyncProgressDisplay_1.default(`${exec} run`, { tag, host, config }); // start the container on the remote
         console.log('');
         execSyncProgressDisplay_1.default(`${exec} clean`, { tag, host, config }); // clean local and remote after deploy
         displayCommandDone_1.default(cmd);

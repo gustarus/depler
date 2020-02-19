@@ -1,11 +1,11 @@
-import commander from 'commander';
+import * as commander from 'commander';
 import displayCommandGreetings from './../helpers/displayCommandGreetings';
 import validateOptionFormat from '../helpers/validateOptionFormat';
-import loadCommandConfig from './../helpers/loadCommandConfig';
 import resolveRegistryTagFromConfig from './../helpers/resolveRegistryTagFromConfig';
 import execSyncProgressDisplay from './../helpers/execSyncProgressDisplay';
 import displayCommandDone from './../helpers/displayCommandDone';
 import { PATTERN_TAG } from './../constants';
+import loadConfig from '../helpers/loadConfig';
 
 export default function push(program: commander.Command) {
   program
@@ -16,8 +16,8 @@ export default function push(program: commander.Command) {
     .action((cmd) => {
       displayCommandGreetings(cmd);
       validateOptionFormat(cmd, 'tag', PATTERN_TAG);
-      const config = loadCommandConfig(cmd);
-      const registryTag = resolveRegistryTagFromConfig(config);
+      const { registry } = loadConfig(cmd);
+      const registryTag = resolveRegistryTagFromConfig(registry);
 
       execSyncProgressDisplay(`docker push ${registryTag}`);
 

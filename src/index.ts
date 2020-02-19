@@ -8,9 +8,11 @@ import clean from './commands/clean';
 import deploy from './commands/deploy';
 import load from './commands/load';
 import login from './commands/login';
+import publish from './commands/publish';
 import pull from './commands/pull';
 import push from './commands/push';
 import run from './commands/run';
+import ssl from './commands/ssl';
 import transfer from './commands/transfer';
 import upload from './commands/upload';
 import Package from './models/Package';
@@ -31,9 +33,11 @@ clean(program);
 deploy(program);
 load(program);
 login(program);
+publish(program);
 pull(program);
 push(program);
 run(program);
+ssl(program);
 transfer(program);
 upload(program);
 
@@ -52,8 +56,10 @@ if (!process.argv.slice(2).length) {
   program.help();
 }
 
-function processError(error: Error) {
-  console.log(colors.red.bold(error.toString()));
-  console.log(error);
-  process.exit(1);
+function processError(error: any) {
+  if (typeof error.exitCode === 'undefined' || error.exitCode > 0) {
+    console.log(colors.red.bold(error.toString()));
+    console.log(error);
+    process.exit(1);
+  }
 }

@@ -9,6 +9,7 @@ const getPathToTemporarySourceCode_1 = __importDefault(require("./../helpers/get
 const getPathToTemporaryArchive_1 = __importDefault(require("./../helpers/getPathToTemporaryArchive"));
 const execSyncProgressDisplay_1 = __importDefault(require("./../helpers/execSyncProgressDisplay"));
 const displayCommandDone_1 = __importDefault(require("./../helpers/displayCommandDone"));
+const loadConfig_1 = __importDefault(require("../helpers/loadConfig"));
 const constants_1 = require("./../constants");
 function clean(program) {
     program
@@ -20,13 +21,14 @@ function clean(program) {
         .action((cmd) => {
         displayCommandGreetings_1.default(cmd);
         validateOptionFormat_1.default(cmd, 'tag', constants_1.PATTERN_TAG);
+        const { tag, host } = loadConfig_1.default(cmd);
         // get path to temporary working directory
-        const tmp = getPathToTemporarySourceCode_1.default(cmd.tag);
+        const tmp = getPathToTemporarySourceCode_1.default(tag);
         // get path to temporary archive
-        const archive = getPathToTemporaryArchive_1.default(cmd.tag);
+        const archive = getPathToTemporaryArchive_1.default(tag);
         // execute clean scenario
         execSyncProgressDisplay_1.default(`rm -rf ${tmp} ${archive}`);
-        execSyncProgressDisplay_1.default(`ssh ${cmd.host} 'rm -rf ${tmp} ${archive}'`); // TODO Use remote command model.
+        execSyncProgressDisplay_1.default(`ssh ${host} 'rm -rf ${tmp} ${archive}'`); // TODO Use remote command model.
         displayCommandDone_1.default(cmd);
     });
 }
