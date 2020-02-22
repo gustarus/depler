@@ -19,14 +19,14 @@ function run(program) {
     program
         .command('run')
         .description('Run container on remote host')
+        .requiredOption('--name <hello>', 'Docker container name to run on remote host')
         .requiredOption('--tag <code:latest>', 'Docker image tag to run on remote host')
         .requiredOption('--host <john@example.com>', 'Host where to run docker container')
         .option('--config <path>', 'Use custom config for the command')
         .action((cmd) => {
         displayCommandGreetings_1.default(cmd);
         validateOptionFormat_1.default(cmd, 'tag', constants_1.PATTERN_TAG);
-        const { tag, host, container } = loadConfig_1.default(cmd);
-        const [code] = tag.split(':');
+        const { tag, name, host, container } = loadConfig_1.default(cmd);
         if (container.network) {
             displayCommandStep_1.default(cmd, 'Creating required networks');
             const networks = typeof container.network === 'string'
@@ -44,7 +44,7 @@ function run(program) {
         displayCommandStep_1.default(cmd, 'Checking for already running containers');
         const listCommand = new Command_1.default({
             formatter: formatter_1.default,
-            parts: [`docker ps -a -q --filter "name=^${code}$" --format="{{.ID}}"`],
+            parts: [`docker ps -a -q --filter "name=^${name}$" --format="{{.ID}}"`],
         });
         const listCommandWrapped = host ? new RemoteCommand_1.default({
             formatter: formatter_1.default,
@@ -64,7 +64,7 @@ function run(program) {
             displayCommandStep_1.default(cmd, 'There is no running containers');
         }
         displayCommandStep_1.default(cmd, `Run the image as a container`);
-        const runCommand = new Command_1.default({ formatter: formatter_1.default, parts: ['docker run', { name: code }, container, tag] });
+        const runCommand = new Command_1.default({ formatter: formatter_1.default, parts: ['docker run', { name }, container, tag] });
         const runCommandWrapped = host ? new RemoteCommand_1.default({
             formatter: formatter_1.default,
             host,

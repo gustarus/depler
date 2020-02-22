@@ -19,7 +19,7 @@ function deploy(program) {
         .command('deploy')
         .arguments('<path>')
         .description('Deploy container to the remote host')
-        .requiredOption('--code <code>', 'Code of the image for tagging')
+        .requiredOption('--code <code>', 'Code (name) of the docker container')
         .requiredOption('--host <john@example.com>', 'Host where to run docker container')
         .requiredOption('--as <source|image|registry>', 'Deploy source code (source), transfer image to remote host (image) or use registry (registry)')
         .option('--release <latest>', 'Release version of the image for tagging (latest git commit hash by default)')
@@ -78,7 +78,7 @@ function deploy(program) {
                 break;
         }
         console.log('');
-        execSyncProgressDisplay_1.default(`${exec} run`, { tag, host, config }); // start the container on the remote
+        execSyncProgressDisplay_1.default(`${exec} run`, { name: code, tag, host, config }); // start the container on the remote
         console.log('');
         execSyncProgressDisplay_1.default(`${exec} clean`, { tag, host, config }); // clean local and remote after deploy
         displayCommandDone_1.default(cmd);

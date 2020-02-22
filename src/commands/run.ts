@@ -16,14 +16,14 @@ export default function run(program: commander.Command) {
   program
     .command('run')
     .description('Run container on remote host')
+    .requiredOption('--name <hello>', 'Docker container name to run on remote host')
     .requiredOption('--tag <code:latest>', 'Docker image tag to run on remote host')
     .requiredOption('--host <john@example.com>', 'Host where to run docker container')
     .option('--config <path>', 'Use custom config for the command')
     .action((cmd) => {
       displayCommandGreetings(cmd);
       validateOptionFormat(cmd, 'tag', PATTERN_TAG);
-      const { tag, host, container } = loadConfig(cmd);
-      const [code] = tag.split(':');
+      const { tag, name, host, container } = loadConfig(cmd);
 
       if (container.network) {
         displayCommandStep(cmd, 'Creating required networks');
@@ -45,7 +45,7 @@ export default function run(program: commander.Command) {
 
       const listCommand = new Command({
         formatter,
-        parts: [`docker ps -a -q --filter "name=^${code}$" --format="{{.ID}}"`],
+        parts: [`docker ps -a -q --filter "name=^${name}$" --format="{{.ID}}"`],
       });
       const listCommandWrapped = host ? new RemoteCommand({
         formatter,
@@ -66,7 +66,7 @@ export default function run(program: commander.Command) {
 
       displayCommandStep(cmd, `Run the image as a container`);
 
-      const runCommand = new Command({ formatter, parts: ['docker run', { name: code }, container, tag] });
+      const runCommand = new Command({ formatter, parts: ['docker run', { name }, container, tag] });
       const runCommandWrapped = host ? new RemoteCommand({
         formatter,
         host,

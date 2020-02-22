@@ -30,6 +30,9 @@ export namespace ConfigSpace {
     // composed tag from `code` and `release` like `my-lovely-container:latest`
     tag: string;
 
+    // container name to assign with docker
+    name: string;
+
     // registry configuration
     registry: {
       username: string;
