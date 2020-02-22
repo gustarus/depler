@@ -94,7 +94,7 @@ export default function deploy(program: commander.Command) {
       }
 
       console.log('');
-      execSyncProgressDisplay(`${exec} run`, { name: code, tag, host, config }); // start the container on the remote
+      execSyncProgressDisplay(`${exec} run`, { code, tag, host, config }); // start the container on the remote
 
       console.log('');
       execSyncProgressDisplay(`${exec} clean`, { tag, host, config }); // clean local and remote after deploy

@@ -18,7 +18,6 @@ export declare namespace ConfigSpace {
         code: string;
         release: string;
         tag: string;
-        name: string;
         registry: {
             username: string;
             host: string;

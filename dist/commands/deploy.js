@@ -78,7 +78,7 @@ function deploy(program) {
                 break;
         }
         console.log('');
-        execSyncProgressDisplay_1.default(`${exec} run`, { name: code, tag, host, config }); // start the container on the remote
+        execSyncProgressDisplay_1.default(`${exec} run`, { code, tag, host, config }); // start the container on the remote
         console.log('');
         execSyncProgressDisplay_1.default(`${exec} clean`, { tag, host, config }); // clean local and remote after deploy
         displayCommandDone_1.default(cmd);
