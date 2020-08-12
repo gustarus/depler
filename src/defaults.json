@@ -8,8 +8,7 @@
   },
   "container": {
     "detach": true,
-    "restart": "unless-stopped",
-    "publish": "8000:80"
+    "restart": "unless-stopped"
   },
   "public": {
     "enabled": false,
