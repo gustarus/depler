@@ -27,10 +27,10 @@ function run(program) {
         displayCommandGreetings_1.default(cmd);
         validateOptionFormat_1.default(cmd, 'tag', constants_1.PATTERN_TAG);
         const { code, tag, host, container } = loadConfig_1.default(cmd);
+        const networks = typeof container.network === 'string'
+            ? [container.network] : container.network;
         if (container.network) {
             displayCommandStep_1.default(cmd, 'Creating required networks');
-            const networks = typeof container.network === 'string'
-                ? [container.network] : container.network;
             for (const network of networks) {
                 const networkCommand = new Command_1.default({
                     formatter: formatter_1.default,
@@ -64,13 +64,18 @@ function run(program) {
             displayCommandStep_1.default(cmd, 'There is no running containers');
         }
         displayCommandStep_1.default(cmd, `Run the image as a container`);
-        const runCommand = new Command_1.default({ formatter: formatter_1.default, parts: ['docker run', { name: code }, container, tag] });
-        const runCommandWrapped = host ? new RemoteCommand_1.default({
-            formatter: formatter_1.default,
-            host,
-            parts: [runCommand],
-        }) : runCommand;
+        const [networksGeneral, ...networksChild] = networks;
+        const containerOptions = { ...container, network: networksGeneral };
+        const runCommand = new Command_1.default({ formatter: formatter_1.default, parts: ['docker run', { name: code }, containerOptions, tag] });
+        const runCommandWrapped = host
+            ? new RemoteCommand_1.default({ formatter: formatter_1.default, host, parts: [runCommand] }) : runCommand;
         execSyncProgressDisplay_1.default(runCommandWrapped);
+        for (const network of networksChild) {
+            const runCommand = new Command_1.default({ formatter: formatter_1.default, parts: ['docker', 'network', 'connect', network, code] });
+            const runCommandWrapped = host
+                ? new RemoteCommand_1.default({ formatter: formatter_1.default, host, parts: [runCommand] }) : runCommand;
+            execSyncProgressDisplay_1.default(runCommandWrapped);
+        }
         displayCommandDone_1.default(cmd);
     });
 }

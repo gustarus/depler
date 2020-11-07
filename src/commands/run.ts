@@ -25,10 +25,11 @@ export default function run(program: commander.Command) {
       validateOptionFormat(cmd, 'tag', PATTERN_TAG);
       const { code, tag, host, container } = loadConfig(cmd);
 
+      const networks = typeof container.network === 'string'
+        ? [container.network] : container.network;
+
       if (container.network) {
         displayCommandStep(cmd, 'Creating required networks');
-        const networks = typeof container.network === 'string'
-          ? [container.network] : container.network;
 
         for (const network of networks) {
           const networkCommand = new Command({
@@ -66,13 +67,19 @@ export default function run(program: commander.Command) {
 
       displayCommandStep(cmd, `Run the image as a container`);
 
-      const runCommand = new Command({ formatter, parts: ['docker run', { name: code }, container, tag] });
-      const runCommandWrapped = host ? new RemoteCommand({
-        formatter,
-        host,
-        parts: [runCommand],
-      }) : runCommand;
+      const [networksGeneral, ...networksChild] = networks;
+      const containerOptions = { ...container, network: networksGeneral };
+      const runCommand = new Command({ formatter, parts: ['docker run', { name: code }, containerOptions, tag] });
+      const runCommandWrapped = host
+        ? new RemoteCommand({ formatter, host, parts: [runCommand] }) : runCommand;
       execSyncProgressDisplay(runCommandWrapped);
+
+      for (const network of networksChild) {
+        const runCommand = new Command({ formatter, parts: ['docker', 'network', 'connect', network, code] });
+        const runCommandWrapped = host
+          ? new RemoteCommand({ formatter, host, parts: [runCommand] }) : runCommand;
+        execSyncProgressDisplay(runCommandWrapped);
+      }
 
       displayCommandDone(cmd);
     });
