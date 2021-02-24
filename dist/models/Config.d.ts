@@ -11,6 +11,37 @@ export declare namespace ConfigSpace {
     type Source = {
         [key: string]: any;
     };
+    type Options = {
+        [key: string]: any;
+    };
+    type Registry = {
+        username: string;
+        host: string;
+        path: string;
+        password: string;
+    };
+    type Public = {
+        tool: 'nginx';
+        directory: string;
+        credentials: string;
+        name: string;
+        port: string;
+        restart: boolean;
+    };
+    type Access = {
+        restrict: boolean;
+        credentials: {
+            [key: string]: string;
+        };
+    };
+    type Proxy = {
+        location?: string;
+        name: string;
+        port: string;
+    };
+    type Ssl = {
+        restart: boolean;
+    };
     type Parsed = {
         as: 'image' | 'source' | 'registry';
         config?: string;
@@ -18,38 +49,14 @@ export declare namespace ConfigSpace {
         code: string;
         release: string;
         tag: string;
-        registry: {
-            username: string;
-            host: string;
-            path: string;
-            password: string;
-        };
-        image: {
-            [key: string]: any;
-        };
-        container: {
-            [key: string]: any;
-        };
-        certbot: {
-            [key: string]: any;
-        };
-        public: {
-            enabled: boolean;
-            tool: 'nginx';
-            directory: string;
-            name: string;
-            port: string;
-            restart: boolean;
-        };
-        proxy: {
-            enabled: boolean;
-            name: string;
-            port: string;
-        };
-        ssl: {
-            enabled: boolean;
-            restart: boolean;
-        };
+        registry: Registry;
+        image: Options;
+        container: Options;
+        certbot: Options;
+        public: Public;
+        proxy: Proxy | Proxy[];
+        ssl: Ssl;
+        access: Access;
     };
 }
 export default class Config<C = {}> extends Base<C & ConfigSpace.Config> {

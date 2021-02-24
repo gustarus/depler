@@ -5,6 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const Base_1 = __importDefault(require("../base/Base"));
 class Command extends Base_1.default {
+    static create(formatter, parts) {
+        return new Command({ formatter, parts });
+    }
     compile(runtimeConfig = { wrap: false }) {
         const prepared = this.config.parts.map((part) => {
             if (part instanceof Command) {

@@ -1,4 +1,5 @@
-import Command from './Command';
+import Command, { CommandSpace } from './Command';
+import Formatter from './Formatter';
 
 export namespace RemoteCommandSpace {
   export type Config = {
@@ -12,6 +13,10 @@ export namespace RemoteCommandSpace {
 }
 
 export default class RemoteCommand extends Command<RemoteCommandSpace.Config> {
+
+  public static createWithHost(formatter: Formatter, host: string, parts: CommandSpace.Part[], options?: { with?: string[] }): RemoteCommand {
+    return new RemoteCommand({ formatter, host, parts, ...options });
+  }
 
   public get defaults(): any {
     return { with: [] };

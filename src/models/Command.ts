@@ -16,6 +16,10 @@ export namespace CommandSpace {
 
 export default class Command<C = {}> extends Base<C & CommandSpace.Config> {
 
+  public static create(formatter: Formatter, parts: CommandSpace.Part[]) {
+    return new Command({ formatter, parts });
+  }
+
   public compile(runtimeConfig: CommandSpace.Runtime = { wrap: false }): string {
     const prepared = this.config.parts.map((part) => {
       if (part instanceof Command) {

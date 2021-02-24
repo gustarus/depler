@@ -11,18 +11,20 @@
         "restart": "unless-stopped"
     },
     "public": {
-        "enabled": false,
         "tool": "nginx",
         "directory": "/etc/nginx/sites",
+        "credentials": "/etc/nginx/credentials",
         "port": "80",
         "restart": true
     },
+    "access": {
+        "restrict": false,
+        "credentials": {}
+    },
     "proxy": {
-        "enabled": true,
         "name": "localhost"
     },
     "ssl": {
-        "enabled": false,
         "restart": true
     },
     "certbot": {

@@ -1,7 +1,4 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
@@ -9,7 +6,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+const fs = __importStar(require("fs-extra"));
 const displayCommandGreetings_1 = __importDefault(require("./../helpers/displayCommandGreetings"));
 const execSyncProgressDisplay_1 = __importDefault(require("./../helpers/execSyncProgressDisplay"));
 const displayCommandDone_1 = __importDefault(require("./../helpers/displayCommandDone"));
@@ -28,24 +29,55 @@ function publish(program) {
         .option('--config <path>', 'Use custom config for the command')
         .action((cmd) => {
         displayCommandGreetings_1.default(cmd);
-        const { host, public: _public, proxy: _proxy } = loadConfig_1.default(cmd);
+        const { host, public: _public, access, proxy: _proxy, ...rest } = loadConfig_1.default(cmd);
+        const proxy = Array.isArray(_proxy) ? _proxy : [_proxy];
+        // define path to files
+        const targetPathDimensions = [
+            _public.port !== constants_1.HTTP_PORT ? _public.port : undefined,
+        ].filter(Boolean).join('.');
+        const targetPathSuffix = targetPathDimensions && '.' + targetPathDimensions || '';
+        const configTargetPath = `${_public.directory}/${_public.name}${targetPathSuffix}`;
+        const credentialsTargetPath = `${_public.credentials}/${_public.name}${targetPathSuffix}`;
         // validate publishing tool
         if (_public.tool !== 'nginx') {
             throw new Error('Only nginx publishing tool currently supported');
+        }
+        // create and transfer credentials file if required
+        const pathToCredentialsRuntime = path.resolve(constants_1.PATH_TO_RUNTIME, 'htpasswd');
+        if (access.restrict) {
+            // create credentials file content
+            const credentials = Object.keys(access.credentials)
+                .map((user) => `${user}:${access.credentials[user]}`).join('\n') + '\n';
+            // create credentials file
+            fs.writeFileSync(pathToCredentialsRuntime, credentials);
+            // ensure that target credentials folder exist
+            const createCredentialsFolderCommand = Command_1.default.create(formatter_1.default, ['mkdir', '-p', _public.credentials]);
+            const createCredentialsFolderRemote = host
+                ? RemoteCommand_1.default.createWithHost(formatter_1.default, host, [createCredentialsFolderCommand])
+                : createCredentialsFolderCommand;
+            execSyncProgressDisplay_1.default(createCredentialsFolderRemote);
+            // transfer credentials file
+            const transferCredentialsTarget = host ? `${host}:${credentialsTargetPath}` : credentialsTargetPath;
+            const transferCredentialsCommand = Command_1.default.create(formatter_1.default, ['scp', pathToCredentialsRuntime, transferCredentialsTarget]);
+            execSyncProgressDisplay_1.default(transferCredentialsCommand);
         }
         // create nginx configuration from template
         const pathToTemplateRuntime = path.resolve(constants_1.PATH_TO_RUNTIME, 'server.conf');
         createFileFromTemplate_1.default(constants_1.PATH_TO_TEMPLATE_SERVER, pathToTemplateRuntime, {
             SERVER_NAME: _public.name,
             SERVER_PORT: _public.port,
-            TARGET_NAME: _proxy.name,
-            TARGET_PORT: _proxy.port,
+            ACCESS_RESTRICT: access.restrict,
+            ACCESS_CREDENTIALS: credentialsTargetPath,
+            PROXY: proxy.map((item) => ({
+                LOCATION: item.location || constants_1.PROXY_DEFAULT_LOCATION,
+                TARGET_NAME: item.name || constants_1.PROXY_DEFAULT_HOST,
+                TARGET_PORT: item.port || constants_1.PROXY_DEFAULT_PORT,
+            })),
         });
-        // copy configuration to remote server if required
-        const scpTargetPath = `${_public.directory}/${_public.name}`;
-        const scpTargetCommand = host ? `${host}:${scpTargetPath}` : scpTargetPath;
-        const command = new Command_1.default({ formatter: formatter_1.default, parts: ['scp', pathToTemplateRuntime, scpTargetCommand] });
-        execSyncProgressDisplay_1.default(command);
+        // copy configuration file to remote server if required
+        const configScpTargetCommand = host ? `${host}:${configTargetPath}` : configTargetPath;
+        const transferConfigCommand = Command_1.default.create(formatter_1.default, ['scp', pathToTemplateRuntime, configScpTargetCommand]);
+        execSyncProgressDisplay_1.default(transferConfigCommand);
         // restart tool if required
         if (_public.restart) {
             const restartCommand = new Command_1.default({ formatter: formatter_1.default, parts: ['sudo', 'service', 'nginx', 'restart'] });

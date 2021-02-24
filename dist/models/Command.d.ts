@@ -13,6 +13,7 @@ export declare namespace CommandSpace {
     };
 }
 export default class Command<C = {}> extends Base<C & CommandSpace.Config> {
+    static create(formatter: Formatter, parts: CommandSpace.Part[]): Command<{}>;
     compile(runtimeConfig?: CommandSpace.Runtime): string;
     protected compileOptions(options: {
         [key: string]: string | string[];

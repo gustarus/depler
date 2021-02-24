@@ -11,6 +11,69 @@ export namespace ConfigSpace {
 
   export type Source = { [key: string]: any };
 
+  export type Options = { [key: string]: any };
+
+  export type Registry = {
+    username: string;
+    host: string;
+    path: string;
+    password: string;
+  };
+
+  export type Public = {
+    // tool to do publishing processing
+    // only nginx currently supported
+    tool: 'nginx';
+
+    // path to web site configuration file
+    // for nginx it is can be `/etc/nginx/sites`
+    directory: string;
+
+    // path to web site credentials file
+    // where to store .htaccess files
+    credentials: string;
+
+    // server name property
+    // domain or ip
+    name: string;
+
+    // listen to this port
+    // for passed server name
+    port: string;
+
+    // restart tool after successful configuration
+    restart: boolean;
+  };
+
+  export type Access = {
+    // whether to restrict access or not
+    // with the basic auth functionality
+    restrict: boolean;
+
+    // http basic auth credentials list to pass
+    credentials: { [key: string]: string };
+  };
+
+  export type Proxy = {
+    // location block match value
+    // by default it is '/'
+    location?: string;
+
+    // where to proxy requests from the internet
+    // for the configured web site
+    // for docker it should be localhost
+    name: string;
+
+    // port where to proxy requests
+    // usually `-p` property value from `docker run`
+    port: string;
+  };
+
+  export type Ssl = {
+    // restart publishing tool after successful configuration
+    restart: boolean;
+  };
+
   export type Parsed = {
     // deploy scenario
     as: 'image' | 'source' | 'registry';
@@ -31,72 +94,30 @@ export namespace ConfigSpace {
     tag: string;
 
     // registry configuration
-    registry: {
-      username: string;
-      host: string;
-      path: string;
-      password: string;
-    };
+    registry: Registry;
 
     // docker image build `docker build` options
-    image: { [key: string]: any };
+    image: Options;
 
     // docker image container `docker run` options
-    container: { [key: string]: any };
+    container: Options;
 
     // certbot configuration to configure ssl generation tool
-    certbot: { [key: string]: any };
+    certbot: Options;
 
     // public configuration to expose container to the internet
     // via publishing tool like `nginx`
-    public: {
-      // enable publication for the site to the internet
-      enabled: boolean;
-
-      // tool to do publishing processing
-      // only nginx currently supported
-      tool: 'nginx';
-
-      // path to web site configuration file
-      // for nginx it is can be `/etc/nginx/sites`
-      directory: string;
-
-      // server name property
-      // domain or ip
-      name: string;
-
-      // listen to this port
-      // for passed server name
-      port: string;
-
-      // restart tool after successful configuration
-      restart: boolean;
-    };
+    public: Public;
 
     // internal configuration to proxy requests from the internet
     // to the locally running docker container
-    proxy: {
-      // enable proxy from the internet to the container
-      enabled: boolean;
-
-      // where to proxy requests from the internet
-      // for the configured web site
-      // for docker it should be localhost
-      name: string;
-
-      // port where to proxy requests
-      // usually `-p` property value from `docker run`
-      port: string;
-    };
+    proxy: Proxy | Proxy[];
 
     // ssl configuration for the published site
-    ssl: {
-      // enable ssl certificate generation for the web site
-      enabled: boolean;
+    ssl: Ssl,
 
-      // restart publishing tool after successful configuration
-      restart: boolean;
-    }
+    // auth configuration for the published site
+    access: Access,
   };
 }
 
