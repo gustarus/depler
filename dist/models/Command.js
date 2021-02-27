@@ -12,7 +12,7 @@ class Command extends Base_1.default {
         const prepared = this.config.parts.map((part) => {
             if (part instanceof Command) {
                 // compile child command
-                const child = part.compile({ ...runtimeConfig, wrap: true });
+                const child = part.compile(Object.assign(Object.assign({}, runtimeConfig), { wrap: true }));
                 return runtimeConfig.wrap
                     ? this.wrapCompiled(child) : child;
             }

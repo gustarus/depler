@@ -6,14 +6,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Command_1 = __importDefault(require("./Command"));
 class RemoteCommand extends Command_1.default {
     static createWithHost(formatter, host, parts, options) {
-        return new RemoteCommand({ formatter, host, parts, ...options });
+        return new RemoteCommand(Object.assign({ formatter, host, parts }, options));
     }
     get defaults() {
         return { with: [] };
     }
     compile(runtimeConfig = { wrap: false }) {
         // compile child command
-        const child = super.compile({ ...runtimeConfig, wrap: false });
+        const child = super.compile(Object.assign(Object.assign({}, runtimeConfig), { wrap: false }));
         // get all proxy variables and skip raw values
         const variables = this.config.with
             .filter((variable) => variable.trim().match(/^\$/))

@@ -20,7 +20,7 @@ function ssl(program) {
         displayCommandGreetings_1.default(cmd);
         const { host, public: _public, certbot, ssl } = loadConfig_1.default(cmd);
         // create certbot configuration command
-        const certbotCommand = new Command_1.default({ formatter: formatter_1.default, parts: ['sudo', 'certbot', { ...certbot, d: _public.name }] });
+        const certbotCommand = new Command_1.default({ formatter: formatter_1.default, parts: ['sudo', 'certbot', Object.assign(Object.assign({}, certbot), { d: _public.name })] });
         const certbotCommandRemoteConfig = { formatter: formatter_1.default, host, parts: [certbotCommand] };
         const certbotCommandWrapped = host ? new RemoteCommand_1.default(certbotCommandRemoteConfig) : certbotCommand;
         execSyncProgressDisplay_1.default(certbotCommandWrapped);

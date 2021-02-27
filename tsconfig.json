@@ -1,14 +1,17 @@
 {
   "compilerOptions": {
-    "target": "esnext",
+    "target": "es6",
     "module": "commonjs",
-    "declaration": true,
+    "lib": [
+      "es6",
+      "es2020.string"
+    ],
+    "allowJs": true,
     "rootDir": "src",
     "outDir": "dist",
     "strict": true,
-    "strictPropertyInitialization": false,
+    "noImplicitAny": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true
   },
   "include": [

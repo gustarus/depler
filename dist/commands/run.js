@@ -65,7 +65,7 @@ function run(program) {
         }
         displayCommandStep_1.default(cmd, `Run the image as a container`);
         const [networksGeneral, ...networksChild] = networks;
-        const containerOptions = { ...container, network: networksGeneral };
+        const containerOptions = Object.assign(Object.assign({}, container), { network: networksGeneral });
         const runCommand = new Command_1.default({ formatter: formatter_1.default, parts: ['docker run', { name: code }, containerOptions, tag] });
         const runCommandWrapped = host
             ? new RemoteCommand_1.default({ formatter: formatter_1.default, host, parts: [runCommand] }) : runCommand;

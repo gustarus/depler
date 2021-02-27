@@ -15,6 +15,9 @@ class Config extends Base_1.default {
             this._parsed = this.processSources(this.config.sources);
             // replace environment variables
             this._parsed = this.processVariables(this._parsed, this.config.variables);
+            if (!this._parsed) {
+                throw new Error('Unable to parse the configuration file');
+            }
         }
         return this._parsed;
     }

@@ -18,7 +18,7 @@ class Source extends Base_1.default {
         this._path = path.resolve(value);
     }
     get path() {
-        return this._path;
+        return this._path || '';
     }
     get source() {
         if (!this._source) {

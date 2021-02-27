@@ -15,7 +15,7 @@ export namespace SourceSpace {
 
 export default abstract class Source<C> extends Base<SourceSpace.Config & C> {
 
-  private _path: string;
+  private _path?: string;
 
   private _source?: string;
 
@@ -24,7 +24,7 @@ export default abstract class Source<C> extends Base<SourceSpace.Config & C> {
   }
 
   public get path(): string {
-    return this._path;
+    return this._path || '';
   }
 
   public get source(): string {

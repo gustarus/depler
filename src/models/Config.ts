@@ -123,7 +123,7 @@ export namespace ConfigSpace {
 
 export default class Config<C = {}> extends Base<C & ConfigSpace.Config> {
 
-  private _parsed: ConfigSpace.Parsed;
+  private _parsed?: ConfigSpace.Parsed;
 
   public get base() {
     return {} as ConfigSpace.Parsed;
@@ -136,6 +136,10 @@ export default class Config<C = {}> extends Base<C & ConfigSpace.Config> {
 
       // replace environment variables
       this._parsed = this.processVariables(this._parsed, this.config.variables);
+
+      if (!this._parsed) {
+        throw new Error('Unable to parse the configuration file');
+      }
     }
 
     return this._parsed;
