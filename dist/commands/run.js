@@ -15,6 +15,7 @@ const Command_1 = __importDefault(require("./../models/Command"));
 const loadConfig_1 = __importDefault(require("../helpers/loadConfig"));
 const formatter_1 = __importDefault(require("../instances/formatter"));
 const constants_1 = require("./../constants");
+const ensureCollection_1 = __importDefault(require("../helpers/ensureCollection"));
 function run(program) {
     program
         .command('run')
@@ -27,9 +28,8 @@ function run(program) {
         displayCommandGreetings_1.default(cmd);
         validateOptionFormat_1.default(cmd, 'tag', constants_1.PATTERN_TAG);
         const { code, tag, host, container } = loadConfig_1.default(cmd);
-        const networks = typeof container.network === 'string'
-            ? [container.network] : container.network;
-        if (container.network) {
+        const networks = ensureCollection_1.default(container.network);
+        if (networks && networks.length) {
             displayCommandStep_1.default(cmd, 'Creating required networks');
             for (const network of networks) {
                 const networkCommand = new Command_1.default({
@@ -65,7 +65,7 @@ function run(program) {
         }
         displayCommandStep_1.default(cmd, `Run the image as a container`);
         const [networksGeneral, ...networksChild] = networks;
-        const containerOptions = Object.assign(Object.assign({}, container), { network: networksGeneral });
+        const containerOptions = Object.assign(Object.assign({}, container), { network: networksGeneral || undefined });
         const runCommand = new Command_1.default({ formatter: formatter_1.default, parts: ['docker run', { name: code }, containerOptions, tag] });
         const runCommandWrapped = host
             ? new RemoteCommand_1.default({ formatter: formatter_1.default, host, parts: [runCommand] }) : runCommand;

@@ -11,6 +11,7 @@ import Command from './../models/Command';
 import loadConfig from '../helpers/loadConfig';
 import formatter from '../instances/formatter';
 import { PATTERN_TAG } from './../constants';
+import ensureCollection from '../helpers/ensureCollection';
 
 export default function run(program: commander.Command) {
   program
@@ -25,10 +26,9 @@ export default function run(program: commander.Command) {
       validateOptionFormat(cmd, 'tag', PATTERN_TAG);
       const { code, tag, host, container } = loadConfig(cmd);
 
-      const networks = typeof container.network === 'string'
-        ? [container.network] : container.network;
+      const networks = ensureCollection<string>(container.network);
 
-      if (container.network) {
+      if (networks && networks.length) {
         displayCommandStep(cmd, 'Creating required networks');
 
         for (const network of networks) {
@@ -68,7 +68,7 @@ export default function run(program: commander.Command) {
       displayCommandStep(cmd, `Run the image as a container`);
 
       const [networksGeneral, ...networksChild] = networks;
-      const containerOptions = { ...container, network: networksGeneral };
+      const containerOptions = { ...container, network: networksGeneral || undefined };
       const runCommand = new Command({ formatter, parts: ['docker run', { name: code }, containerOptions, tag] });
       const runCommandWrapped = host
         ? new RemoteCommand({ formatter, host, parts: [runCommand] }) : runCommand;
