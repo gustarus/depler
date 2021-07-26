@@ -78,6 +78,12 @@ export namespace ConfigSpace {
     // deploy scenario
     as: 'image' | 'source' | 'registry';
 
+    // credentials user
+    user: string;
+
+    // credentials password
+    password: string;
+
     // path to custom config file
     config?: string;
 
@@ -118,6 +124,12 @@ export namespace ConfigSpace {
 
     // auth configuration for the published site
     access: Access,
+
+    // database engine
+    engine: string;
+
+    // database name
+    database: string;
   };
 }
 

@@ -9,6 +9,7 @@ const colors_1 = __importDefault(require("colors"));
 const archive_1 = __importDefault(require("./commands/archive"));
 const build_1 = __importDefault(require("./commands/build"));
 const clean_1 = __importDefault(require("./commands/clean"));
+const database_dump_1 = __importDefault(require("./commands/database-dump"));
 const deploy_1 = __importDefault(require("./commands/deploy"));
 const load_1 = __importDefault(require("./commands/load"));
 const login_1 = __importDefault(require("./commands/login"));
@@ -31,6 +32,7 @@ commander_1.default
 archive_1.default(commander_1.default);
 build_1.default(commander_1.default);
 clean_1.default(commander_1.default);
+database_dump_1.default(commander_1.default);
 deploy_1.default(commander_1.default);
 load_1.default(commander_1.default);
 login_1.default(commander_1.default);

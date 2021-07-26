@@ -42,7 +42,7 @@ Add script to your package.json because commands usually too long to type them e
     "deploy": "./node_modules/.bin/depler deploy ..."
   }
 }
-``` 
+```
 
 ## Examples
 ### Copy-and-paste source code to remote host → build docker image remotely → run docker container remotely
@@ -71,7 +71,7 @@ Take a look at this command.
 It says to the tool: *bro, deploy the app (`deploy`) with repository name `my-nodejs-app` (`--code`) to host `192.168.1.22` as user `web` (`--host`) using `source` strategy (`--as source`) and build the image with arg `FROM=arm64v8/node:10.16.1-buster-slim` (`--build-arg`) and run the container on port `8080` (default config)*.
 ```bash
 depler deploy --code my-nodejs-app --host web@192.168.1.22 --as source --build-arg FROM=arm64v8/node:10.16.1-buster-slim .
-``` 
+```
 
 My dockerfile for the app looks like below.
 ```dockerfile
@@ -97,7 +97,7 @@ And it has a lot of options.
 #### Options
 Option | Example | Default | Description
 --- | --- | --- | ---
-`--code` | `code` | - | Code of the image for tagging. | 
+`--code` | `code` | - | Code of the image for tagging. |
 `--release` | `gelborg` | Latest git commit short hash, for example: `b2508fe`. | Release version of the image for tagging. |
 `--host` | `john@example.com` | - | Host where to run docker container. |
 `--as` | `source` or `image` or `registry` | - | Define deploy scenario:<br/>`source`: deploy source code as files and build on the remote host without files under the .gitignore;<br/>`image`: build locally and transfer image to the remote host. |
@@ -105,7 +105,7 @@ Option | Example | Default | Description
 `--help` | - | - | Show help readme. |
 
 #### `--as source` vs. `--as image` vs `--as registry`
-Which to chose? 
+Which to chose?
 
 The first one (`--as source`) tells the tool to use the next flow:
 1. Copy-and-paste source code from local folder to remote host into `/tmp/...` folder.
@@ -131,22 +131,22 @@ I prefer to use the second scenario (`--as image`).
 All other commands from this tool are not usable as standalone commands.
 But, if something went wrong, you can just rerun failed command with logged arguments.
 
-Command | Description 
+Command | Description
 --- | ---
-upload [options] <path> | Upload source code to the remote host.
-build [options] <path> | Build docker image from source code: local and remote build scenarios are allowed.
 archive [options] | Archive image to temporary file.
-transfer [options] | Transfer image archive to remote host.
+build [options] <path> | Build docker image from source code: local and remote build scenarios are allowed.
+clean [options] | Clean local and remote hosts.
+database-dump [options] <path> | Dump database docker container to the local file. Only mysql engine is supported now.
+deploy [options] <path> | Deploy container to the remote host.
 load [options] | Load image from archive on remote host.
 login [options] | Login into registry locally or inside remote host.
-push [options] | Push image to docker registry.
-pull [options] | Pull image from registry to remote host.
-exit [options] | Stop and remove running container.
-run [options] | Run container on remote host.
-clean [options] | Clean local and remote hosts.
-deploy [options] <path> | Deploy container to the remote host.
 publish [options] <path> | Publish web site with nginx tool.
+pull [options] | Pull image from registry to remote host.
+push [options] | Push image to docker registry.
+run [options] | Run container on remote host.
 ssl [options] <path> | Generate ssl certificate for the site.
+transfer [options] | Transfer image archive to remote host.
+upload [options] <path> | Upload source code to the remote host.
 
 ## Overrides for commands
 There is an ability to override some commands like `docker run` or `docker build`.
@@ -159,7 +159,7 @@ Take a look at `${SSH_PRIVATE_KEY}`: this will be replaced with actual env value
 
 Next logic will be applied to the commands when it shows inside the console: `--build-arg SOME_VARIABLE="..."` will be turned into `--build-arg SOME_VARIABLE="*****"`, `--env SOME_VARIABLE="..."` will be turned into `--env SOME_VARIABLE="*****"` for the console outputs.
 It is useful when you pass secrets inside env variables.
-You can `echo` variables before depler to ensure that all variables exist in environment.  
+You can `echo` variables before depler to ensure that all variables exist in environment.
 
 Do not forget to add `"${VALUE}"` to correctly provide env variables values.
 
@@ -194,7 +194,7 @@ Do not forget to add `"${VALUE}"` to correctly provide env variables values.
 Define the following structure inside your `depler.json`.
 Where `host` - registry host like `registry.example.com`; `path` - path to your project, for example, inside gitlab like `gitlab-org/gitlab-foss`; `username` - registry user login; `password` - registry password.
 All registry options could be environment variables.
-To login into registry on remote host we transfer environment variables like `username` or `password` onto remote host ([see example here](https://superuser.com/a/163228)). 
+To login into registry on remote host we transfer environment variables like `username` or `password` onto remote host ([see example here](https://superuser.com/a/163228)).
 
 ```json
 {

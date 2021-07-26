@@ -20,6 +20,8 @@ export default function execSyncProgress(parts: CommandSpace.Part[], scenario: '
         throw new Error('Invalid scenario passed');
     }
   } catch (error) {
+    console.log(error);
+    console.log(colors.red(secretCommandVariables(error.message)));
     console.log(colors.red(secretCommandVariables(error.stack)));
     process.exit(1);
     return false;

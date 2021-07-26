@@ -51,7 +51,7 @@ class Command extends Base_1.default {
     }
     wrapCompiled(compiled) {
         // wrap child command with quotes and add slashes
-        return `'${compiled.replace('\'', '\\\'')}'`;
+        return `'${compiled.replace(/'/g, '\\\\\'')}'`;
     }
 }
 exports.default = Command;

@@ -5,6 +5,7 @@ import colors from 'colors';
 import archive from './commands/archive';
 import build from './commands/build';
 import clean from './commands/clean';
+import databaseDump from './commands/database-dump';
 import deploy from './commands/deploy';
 import load from './commands/load';
 import login from './commands/login';
@@ -30,6 +31,7 @@ program
 archive(program);
 build(program);
 clean(program);
+databaseDump(program);
 deploy(program);
 load(program);
 login(program);

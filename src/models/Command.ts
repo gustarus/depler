@@ -67,6 +67,6 @@ export default class Command<C = {}> extends Base<C & CommandSpace.Config> {
 
   protected wrapCompiled(compiled: string) {
     // wrap child command with quotes and add slashes
-    return `'${compiled.replace('\'', '\\\'')}'`;
+    return `'${compiled.replace(/'/g, '\\\\\'')}'`;
   }
 };

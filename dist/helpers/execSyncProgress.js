@@ -22,6 +22,8 @@ function execSyncProgress(parts, scenario) {
         }
     }
     catch (error) {
+        console.log(error);
+        console.log(safe_1.default.red(secretCommandVariables_1.default(error.message)));
         console.log(safe_1.default.red(secretCommandVariables_1.default(error.stack)));
         process.exit(1);
         return false;
