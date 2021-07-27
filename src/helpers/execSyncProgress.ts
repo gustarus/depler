@@ -4,11 +4,15 @@ import createCommand from './createCommand';
 import secretCommandVariables from './secretCommandVariables';
 import { CommandSpace } from '../models/Command';
 
-export default function execSyncProgress(parts: CommandSpace.Part[], scenario: 'display' | 'return'): any {
+export default function execSyncProgress(parts: CommandSpace.Part[], scenario: 'display' | 'return', secrets: boolean = true): any {
   const command = createCommand(parts);
   const compiled = command.compile();
 
-  console.log(`$ ${secretCommandVariables(compiled)}`);
+  const protect = secrets
+    ? secretCommandVariables
+    : (value: string) => value;
+
+  console.log(`$ ${protect(compiled)}`);
 
   try {
     switch (scenario) {
@@ -20,9 +24,8 @@ export default function execSyncProgress(parts: CommandSpace.Part[], scenario: '
         throw new Error('Invalid scenario passed');
     }
   } catch (error) {
-    console.log(error);
-    console.log(colors.red(secretCommandVariables(error.message)));
-    console.log(colors.red(secretCommandVariables(error.stack)));
+    console.log(colors.red(protect(error.message)));
+    console.log(colors.red(protect(error.stack)));
     process.exit(1);
     return false;
   }

@@ -120,10 +120,13 @@ export namespace ConfigSpace {
     proxy: Proxy | Proxy[];
 
     // ssl configuration for the published site
-    ssl: Ssl,
+    ssl: Ssl;
 
     // auth configuration for the published site
-    access: Access,
+    access: Access;
+
+    // source directory
+    source: string;
 
     // database engine
     engine: string;

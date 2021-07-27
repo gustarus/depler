@@ -127,7 +127,7 @@ The third one (`--as registry`) tells the tool to use the next flow:
 
 I prefer to use the second scenario (`--as image`).
 
-## Other commands
+## General commands
 All other commands from this tool are not usable as standalone commands.
 But, if something went wrong, you can just rerun failed command with logged arguments.
 
@@ -136,7 +136,6 @@ Command | Description
 archive [options] | Archive image to temporary file.
 build [options] <path> | Build docker image from source code: local and remote build scenarios are allowed.
 clean [options] | Clean local and remote hosts.
-database-dump [options] <path> | Dump database docker container to the local file. Only mysql engine is supported now.
 deploy [options] <path> | Deploy container to the remote host.
 load [options] | Load image from archive on remote host.
 login [options] | Login into registry locally or inside remote host.
@@ -147,6 +146,12 @@ run [options] | Run container on remote host.
 ssl [options] <path> | Generate ssl certificate for the site.
 transfer [options] | Transfer image archive to remote host.
 upload [options] <path> | Upload source code to the remote host.
+
+## Service commands
+Command | Description
+--- | ---
+database-dump [options] <path> | Dump remote database docker container to the local file. Only mysql engine is supported now.
+folder-dump [options] <path> | Dump remote folder to the local folder.
 
 ## Overrides for commands
 There is an ability to override some commands like `docker run` or `docker build`.
@@ -210,3 +215,37 @@ To login into registry on remote host we transfer environment variables like `us
 ## Full configuration file
 Take a look at the [type definition](src/models/Config.ts#L14).
 Also take a look at [the default configuration](src/defaults.json).
+
+
+## Questions and answers
+### How to dump remove mysql database which is running under a docker mysql container to your local computer?
+Run the following command.
+Replace `${container-name}` with your remote mysql container name, `default@192.168.1.1` with your remote user and host and `${password}` with your mysql container password.
+The default mysql user `root` can be changed with `---user` option.
+See `depler database-dump --help` for details.
+```bash
+depler database-dump --code ${container-name} --host ${user}@${host} --password '${password}' ~/Downloads
+```
+
+Example of the command for my database container used for the personal blog (`ip` and `password` are unreal).
+```bash
+depler database-dump --code me-blog-database --host default@192.168.1.1 --password 'qwerty' ~/Downloads
+```
+
+The sql file will be saved into `~/Downloads/me-blog-database-YYYY-MM-DD-HH-mm-ss.sql`.
+
+### How to dump remove folder to your local computer?
+Run the following command.
+Replace `${source}` with the real path to the remote source folder, `${target}` with the local target folder and `default@192.168.1.1` with your remote user and host.
+The default mysql user `root` can be changed with `---user` option.
+See `depler database-dump --help` for details.
+```bash
+depler folder-dump --host default@192.168.1.1 --source ${source} ${target}
+```
+
+Example of the command for my uploads folder used for the personal blog (`ip` is unreal).
+```bash
+depler folder-dump --host default@192.168.1.1 --source /data/me-blog-uploads ~/Downloads/me-blog-uploads
+```
+
+The contents of the source folder will be copied to `~/Downloads/me-blog-upload` folder.

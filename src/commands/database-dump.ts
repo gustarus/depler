@@ -9,12 +9,13 @@ import loadConfig from '../helpers/loadConfig';
 import formatter from '../instances/formatter';
 import { PATTERN_TAG } from '../constants';
 import moment from 'moment';
+import prepareSelectedFolder from '../helpers/prepareSelectedFolder';
 
 export default function databaseDump(program: commander.Command) {
   program
     .command('database-dump')
     .arguments('<path>')
-    .description('Backup mysql database from the mysql docker container')
+    .description('Dump database data from docker database container')
     .requiredOption('--code <code>', 'Code (name) of the mysql docker container')
     .requiredOption('--user <root>', 'Mysql database user to perform dump', 'root')
     .requiredOption('--password <string>', 'Mysql database password to perform dump')
@@ -31,18 +32,22 @@ export default function databaseDump(program: commander.Command) {
       }
 
       // create docker container mysql database dump
-      const backupFileName = `backup-${moment().format('YYYY-MM-DD-HH-mm-ss')}.sql`;
-      const dumpCommandContent = `/usr/bin/mysqldump -u${user} -p${password} ${database} > ~/${backupFileName}`;
+      const backupFileName = `${code}-${moment().format('YYYY-MM-DD-HH-mm-ss')}.sql`;
+      const dumpCommandContent = `/usr/bin/mysqldump --user=${user} --password="${password}" ${database} > ~/${backupFileName}`;
       const dumpCommand = new Command({ formatter, parts: ['docker', 'exec', code, dumpCommandContent] });
       const dumpCommandWrapped = host ? new RemoteCommand({ formatter, host, parts: [dumpCommand] }) : dumpCommand;
       execSyncProgressDisplay(dumpCommandWrapped);
 
+      // ensure source and target folders for the transfer
+      const copyPathFrom = prepareSelectedFolder(host, '~/');
+      const copyPathTo = prepareSelectedFolder(undefined, path);
+
       // download the remote database dump to the current folder
-      const pathFrom = host
-        ? `${host}:~/${backupFileName}`
-        : `~/${backupFileName}`;
-      const pathTo = `${path}/${backupFileName}`;
-      const scpCommand = new Command({ formatter, parts: ['scp', pathFrom, pathTo] });
+      const scpRemote = host
+        ? `${host}:${copyPathFrom}/${backupFileName}`
+        : `${copyPathFrom}/${backupFileName}`;
+      const scpTarget = `${copyPathTo}/${backupFileName}`;
+      const scpCommand = new Command({ formatter, parts: ['scp', scpRemote, scpTarget] });
       execSyncProgressDisplay(scpCommand);
 
       // clean up the raw dump from the remote location
