@@ -3,10 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const path_1 = __importDefault(require("path"));
 const Command_1 = __importDefault(require("../models/Command"));
 const formatter_1 = __importDefault(require("../instances/formatter"));
 const RemoteCommand_1 = __importDefault(require("../models/RemoteCommand"));
-const path_1 = __importDefault(require("path"));
 const execSyncProgressReturn_1 = __importDefault(require("./execSyncProgressReturn"));
 const execSyncProgress_1 = __importDefault(require("./execSyncProgress"));
 function prepareSelectedFolder(host, folder) {
